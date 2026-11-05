@@ -20,3 +20,12 @@ body{background:var(--bg);color:var(--text,#eaf0ff)}.panel,.stat,.auth-card{back
 .transactions-table tfoot td:first-child{color:var(--gold2)}
 .transactions-table td:last-child{white-space:normal}
 @media(max-width:760px){.transactions-table{min-width:865px}.transactions-table th{font-size:9px;letter-spacing:.6px}.transactions-table td{padding:12px 8px}}
+
+/* Darování je dostupné ihned v menu, záhlaví i na mobilu. */
+.sidebar nav .nav-support{display:flex;align-items:center;gap:10px;width:100%;margin:12px 0 8px;padding:14px 12px;min-height:49px;background:#80324d;color:#fff;border:1px solid #a85975;border-radius:12px;text-decoration:none;font-size:13px;font-weight:850;box-shadow:0 6px 14px #20091029;line-height:1.35}
+.sidebar nav .nav-support:hover,.sidebar nav .nav-support:focus-visible{background:#a34265;color:#fff}
+.header-actions a.support-cta{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;background:#80324d;color:#fff;border:1px solid #a85975;border-radius:10px;font-weight:800;min-height:44px;padding:11px 15px;white-space:nowrap;box-shadow:0 4px 15px #20091028}
+.header-actions a.support-cta:hover{background:#a34265;color:#fff}
+@media(max-width:740px){.header-actions a.support-cta{font-size:12px;padding:10px 12px;min-height:40px}}
+@media(max-width:420px){.header-actions a.support-cta{width:100%;order:3}.header-actions{max-width:100%}}
+@media print{.sidebar nav .nav-support,.header-actions a.support-cta{display:none!important}}
