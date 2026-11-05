@@ -6,6 +6,7 @@ header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: same-origin');
 header('X-Frame-Options: DENY');
 header('Cache-Control: private, no-store');
+header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
 $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS']!=='off') || (($_SERVER['HTTP_X_FORWARDED_PROTO']??'')==='https');
 session_name('MOKRYPTOSID');
 session_set_cookie_params(['lifetime'=>0,'path'=>'/','secure'=>$https,'httponly'=>true,'samesite'=>'Lax']);
@@ -159,7 +160,7 @@ if($api!==''){
 <meta name="theme-color" content="#12191e"><meta name="csrf-token" content="<?=htmlspecialchars((string)($_SESSION['csrf']??''),ENT_QUOTES)?>">
 <meta name="description" content="Moje krypto – soukromá evidence BTC a ETH, online kurzy v CZK, analýza, DCA a simulace.">
 <title>Moje krypto | Jiří Janoušek</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css">
-<?php if($logged):?><script src="app.js" defer></script><?php endif;?>
+<?php if($logged):?><script src="charts.js" defer></script><script src="models.js" defer></script><script src="app.js" defer></script><?php endif;?>
 </head><body>
 <?php if(!$logged):?>
 <div class="auth-scene"><div class="auth-card"><div class="mark">₿</div>
