@@ -39,7 +39,7 @@ function profile_fields():void{
 ?>
 <!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="same-origin"><title><?= h($titles[$view]) ?> | Moje krypto</title><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/account.css?v=1"><link rel="stylesheet" href="/account-ui.css?v=1"><script defer src="/account.js?v=1"></script></head>
 <body>
-<header class="account-header"><a class="brand" href="/"><img src="/favicon.svg" width="44" height="44" alt=""><span>MOJE <strong>RENTA</strong><small>Jiří Janoušek</small></span></a>
+<header class="account-header"><a class="brand" href="/"><img src="/favicon.svg" width="44" height="44" alt=""><span>MOJE <strong>KRYPTO</strong><small>Jiří Janoušek</small></span></a>
 <nav aria-label="Navigace účtu" class="account-nav"><a href="/">📊 Aplikace</a>
 <?php if($user): ?><a href="/account.php?view=profile">👤 Můj účet</a><?php if(auth_is_admin($user)): ?><a href="/admin.php">🛡️ Správa uživatelů</a><?php endif; ?>
 <?php else: ?><a href="/account.php?view=login">🔐 Přihlášení</a><a href="/account.php?view=register">✨ Registrace</a><?php endif; ?>
