@@ -232,7 +232,7 @@ if($api!==''){
 <label>Extra nákup při propadu Kč<input type="number" id="dip-extra" value="1000" min="0" step="100"></label>
 <label>Pokles za posledních 30 dní (%)<input type="number" id="dip-threshold" value="15" min="1" max="99" step="1"></label></div>
 <button id="run-dca" class="btn gold">▶ Spočítat DCA & Buy the Dip</button><div class="note">DCA: nákup každý měsíc za pevnou částku. Buy the Dip: navíc až jeden extra nákup za kalendářní měsíc při poklesu o nastavené procento z 30denního maxima. Bez poplatků a daní. Extra nákupy vyžadují dodatečný kapitál; výsledky proto porovnáváme s vloženou částkou.</div></article>
-<article class="panel"><h2>💰 Výsledek strategie</h2><div class="result-grid" id="dca-results"><p class="muted">Vyber parametry a stiskni „Spočítat“.</p></div><div id="dca-chart" class="graph compact"></div><div class="graph-foot" id="dca-foot"></div></article></div>
+<article class="panel"><h2>💰 Výsledek strategie</h2><div class="result-grid" id="dca-results"><p class="muted">Vyber parametry a stiskni „Spočítat“.</p></div><div id="dca-chart" class="graph compact"></div><div class="graph-foot" id="dca-foot"></div><h2 style="margin-top:25px">🛒 Průměrná cena nakupovaných jednotek v čase</h2><p>Spotová cena versus průběžná průměrná nákupní cena DCA a Buy the Dip</p><div id="dca-price-chart" class="graph compact"></div></article></div>
 </section>
 <section id="page-forecast" class="page">
 <div class="two-cols"><article class="panel"><h2>🔮 Model budoucí hodnoty</h2><p>Libovolné roční zhodnocení včetně 112 %, vlastní inflace, pravidelných vkladů a doby investování.</p>
@@ -241,7 +241,7 @@ if($api!==''){
 <label>🔴 Pesimistický výnos % p. a.<input type="number" id="f-low" value="-15" min="-99" max="1000" step="0.1"></label>
 <label>🔵 Vlastní výnos % p. a.<input type="number" id="f-mid" value="12" min="-99" max="1000" step="0.1"></label>
 <label>🟢 Optimistický výnos % p. a.<input type="number" id="f-high" value="25" min="-99" max="1000" step="0.1"></label>
-<label>Ukázková hodnota <button class="inline-btn" id="set-112" type="button">Nastavit 112 %</button><span class="field-hint">112 % p. a. je extrémní ilustrativní scénář, ne předpověď.</span></label></div><button class="btn gold" id="calculate-forecast">✦ Přepočítat model</button>
+<label>Ukázková hodnota <button class="inline-btn" id="set-112" type="button">Nastavit 112 %</button><span class="field-hint">112 % p. a. je extrémní ilustrativní scénář, ne předpověď.</span></label></div><div class="note">📚 Převzít z historických dat: <select id="f-history-coin" aria-label="Historické aktivum"><option value="BTC">₿ BTC</option><option value="ETH">◆ ETH</option></select> <button class="btn" id="use-history" type="button">Použít CAGR z historie (až 15 let)</button><span id="f-history-note"></span></div><button class="btn gold" id="calculate-forecast">✦ Přepočítat model</button>
 <div class="note">Výpočty používají konstantní modelové roční zhodnocení, měsíční složené úročení a vklady na konci měsíce. Inflace snižuje kupní sílu nominální částky. Nezohledňují volatilitu, daně ani poplatky.</div>
 </article><article class="panel"><h2>📊 Srovnání scénářů</h2><div id="forecast-summary" class="result-grid"></div><div id="forecast-chart" class="graph compact"></div><div id="forecast-table"></div></article></div>
 </section>
