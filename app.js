@@ -337,8 +337,11 @@
  function exportJson(){download(JSON.stringify({...data,version:1,exportedAt:new Date().toISOString()},null,2),'moje-krypto-zaloha.json','application/json');notify('✅ Záloha JSON připravena.')}
  const quoted=s=>'"'+String(s??'').replace(/"/g,'""')+'"';
  function exportCsv(){
-  const columns=['date','symbol','type','quantity','czk','note'];
-  const rows=ordered().map(t=>columns.map(k=>quoted(['quantity','czk'].includes(k)?String(t[k]).replace('.',','):t[k])).join(';'));
+  const columns=['date','symbol','type','quantity','czk','note','implied_unit_czk'];
+  const rows=ordered().map(t=>columns.map(k=>quoted(
+   k==='implied_unit_czk'?(K.impliedUnitPrice(t)??''):
+   ['quantity','czk'].includes(k)?String(t[k]).replace('.',','):t[k]
+  )).join(';'));
   download('\uFEFF'+columns.join(';')+'\r\n'+rows.join('\r\n'),'moje-krypto-prevody.csv','text/csv;charset=utf-8');
   notify('✅ CSV transakcí připraveno.');
  }
