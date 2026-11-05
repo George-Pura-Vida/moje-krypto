@@ -122,14 +122,40 @@ if($api!==''){
    return ['points'=>array_values($uniq),'symbol'=>$coin,'period'=>$period,'source'=>'CryptoCompare / CoinDesk Data','coverage_partial'=>count($uniq)<($target*0.95)];
   });reply($res,isset($res['error'])?503:200);
  }
+  if($api==='goals'){
+  $goalFile=auth_dir().'/goals-user-'.(int)$user['id'].'.php';
+  $defaults=['homePrice'=>8000000,'years'=>10,'homeInflation'=>3,'btcGrowth'=>10,'monthly'=>5000,'manualPrice'=>0,'weights'=>[50,10,15,15,10]];
+  if($_SERVER['REQUEST_METHOD']==='GET')reply(['data'=>array_replace($defaults,readStore($goalFile,[]))]);
+  if($_SERVER['REQUEST_METHOD']!=='POST')reply(['error'=>'Nepodporovaná metoda.'],405);
+  csrf();
+  $raw=file_get_contents('php://input',false,null,0,20001);
+  if(!is_string($raw)||strlen($raw)>20000)reply(['error'=>'Příliš velký požadavek.'],413);
+  $incoming=json_decode($raw,true);
+  if(!is_array($incoming))reply(['error'=>'Neplatná struktura plánu.'],422);
+  $limits=['homePrice'=>[100000,100000000000],'years'=>[1,40],'homeInflation'=>[-20,30],'btcGrowth'=>[-80,100],'monthly'=>[0,10000000],'manualPrice'=>[0,100000000000]];
+  $clean=[];
+  foreach($limits as $key=>$range){
+   $v=$incoming[$key]??null;
+   if(!is_numeric($v)||!is_finite((float)$v)||(float)$v<$range[0]||(float)$v>$range[1])reply(['error'=>'Neplatné nastavení: '.$key],422);
+   $clean[$key]=(float)$v;
+  }
+  if(!isset($incoming['weights'])||!is_array($incoming['weights'])||count($incoming['weights'])!==5)reply(['error'=>'Neplatné podíly portfolia.'],422);
+  $clean['weights']=[];
+  foreach($incoming['weights'] as $v){
+   if(!is_numeric($v)||!is_finite((float)$v)||(float)$v<0||(float)$v>100)reply(['error'=>'Neplatný podíl portfolia.'],422);
+   $clean['weights'][]=(float)$v;
+  }
+  if(!writeStore($goalFile,$clean))reply(['error'=>'Plán se nepodařilo uložit.'],500);
+  reply(['ok'=>true]);
+ }
  reply(['error'=>'Neznámá akce.'],404);
 }
 ?>
 <!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#12191e"><meta name="csrf-token" content="<?=htmlspecialchars((string)($_SESSION['csrf']??''),ENT_QUOTES)?>">
 <meta name="description" content="Moje krypto – soukromá evidence BTC a ETH, online kurzy v CZK, analýza, DCA a simulace.">
-<title>Moje krypto | Jiří Janoušek</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css">
-<?php if($logged):?><script src="charts.js" defer></script><script src="models.js" defer></script><script src="app.js" defer></script><?php endif;?>
+<title>Moje krypto | Jiří Janoušek</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="premium.css">
+<?php if($logged):?><script src="charts.js" defer></script><script src="models.js" defer></script><script src="app.js" defer></script><script src="premium.js" defer></script><?php endif;?>
 </head><body>
 <?php if($logged):?>
 <div class="app-layout"><div id="mobile-shade"></div><aside id="sidebar" class="sidebar">
@@ -140,6 +166,9 @@ if($api!==''){
 <button class="nav-link" data-page="transactions">💸 <span>Transakce</span></button>
 <button class="nav-link" data-page="strategies">🔁 <span>DCA & Buy the Dip</span></button>
 <button class="nav-link" data-page="forecast">🔮 <span>Predikce & scénáře</span></button>
+<button class="nav-link" data-page="property">🏡 <span>Bitcoin & nemovitost</span></button>
+<button class="nav-link" data-page="diversify">🧩 <span>Diverzifikace</span></button>
+<button class="nav-link" data-page="exports">📤 <span>Excel & PDF</span></button>
 <button class="nav-link" data-page="settings">⚙️ <span>Nastavení & data</span></button>
 <a href="/account.php?view=profile" class="nav-link">👤 <span>Můj účet</span></a></nav><div class="sidebar-bottom"><p>🔐 Soukromá evidence. Kurzy dodává CryptoCompare / CoinDesk Data.</p><a href="https://jirijanousek.cz/" target="_blank" rel="noopener noreferrer">jirijanousek.cz ↗</a></div>
 </aside>
@@ -198,6 +227,7 @@ if($api!==''){
 <div class="note">Výpočty používají konstantní modelové roční zhodnocení, měsíční složené úročení a vklady na konci měsíce. Inflace snižuje kupní sílu nominální částky. Nezohledňují volatilitu, daně ani poplatky.</div>
 </article><article class="panel"><h2>📊 Srovnání scénářů</h2><div id="forecast-summary" class="result-grid"></div><div id="forecast-chart" class="graph compact"></div><div id="forecast-table"></div></article></div>
 </section>
+<?php define('MOJE_KRYPTO_AUTH_VIEW',true); require __DIR__.'/premium.view.php'; ?>
 <section id="page-settings" class="page">
 <div class="two-cols"><article class="panel"><h2>💼 Stav portfolia</h2><p>Zadej aktuální množství BTC/ETH a pořizovací náklady aktuálně držených jednotek. Cena trhu se doplňuje automaticky online.</p>
 <div class="form-columns"><label>🟠 BTC (množství)<input type="number" id="qty-btc" step="0.00000001" min="0"></label><label>💠 ETH (množství)<input type="number" id="qty-eth" step="0.00000001" min="0"></label>

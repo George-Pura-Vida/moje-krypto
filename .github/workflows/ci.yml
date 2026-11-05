@@ -1,28 +1,26 @@
-name: Kontrola Moje krypto
+name: Kontrola Moje Krypto
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
-
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       - name: PHP syntax
         run: |
-          php -l index.php
-          php -l config.example.php
+          for file in index.php account.php admin.php premium.view.php auth/*.php; do php -l "$file"; done
       - name: JavaScript syntax
         run: |
-          node --check charts.js
-          node --check models.js
-          node --check app.js
-      - name: Public repository has no private config
+          for file in charts.js models.js app.js premium.js account.js; do node --check "$file"; done
+      - name: Private data must not be committed
         run: |
           test ! -f config.local.php
           test ! -f storage/data.php
           test ! -f storage/admin.php
+          test ! -d var
+          test ! -f accounts.sqlite
+          ! grep -r 'BEGIN.*PRIVATE KEY' --include='*.php' --include='*.js' . 

@@ -1,24 +1,24 @@
-# ₿ Moje krypto – Bitcoin a Ethereum
+# ₿ MOJE KRYPTO — Bitcoin s plánem
 
-Osobní webová aplikace Jiřího Janouška pro BTC/ETH. PHP 8.1+ na Webkitty, vlastní administrátorské přihlášení (bez registrace), tmavý/zlatý responzivní design.
+Moderní responzivní investiční aplikace Jiřího Janouška, která spojuje evidenci kryptoměn, skutečné tržní grafy, modelové scénáře, plán na bydlení a diverzifikaci.
 
-### Funkce
-- 📊 Dashboard: online kurzy BTC/ETH v CZK, změna za 24 hodin, hodnoty držených aktiv, donut graf a roční příjmy.
-- 📈 Interaktivní historické grafy 1D, 7D, 1M, 3M, 6M, 1Y, 5Y, 15Y; dostupnost 15leté historie závisí na datovém zdroji.
-- 💹 Kumulativní výnosy, CAGR, vlastní scénář zhodnocení, inflace a kupní síla.
-- 🔁 Historická simulace DCA a Buy the Dip s nastavitelnými vklady, nákupním prahem a průměrnou cenou.
-- 🔮 Budoucí modely investic s měnitelnou inflací a ročním výnosem (včetně ilustrativních 112 %).
-- 💸 Evidence převodů, úpravy, filtry, export CSV a soukromá JSON záloha i import.
-- 🔒 Jediný administrátor, heslo hashované na serveru, session cookies a CSRF ochrana. Bez externích fontů a bez publikovaných osobních dat.
+## Funkce
+- 📊 Přehled BTC/ETH v Kč, historické kurzy a orientační zhodnocení podle zadaných pořizovacích nákladů.
+- 📈 Historické grafy v rozsahu 1D–15Y s upozorněním na neúplná nebo nedostupná data.
+- 💸 Evidence transakcí s příjmy, odesláním, nákupem a prodejem; vlastní stav peněženek a pořizovací náklady.
+- 🔁 Simulátory pravidelného nakupování (DCA), Buy the Dip a budoucích scénářů.
+- 🏡 Model „Bitcoin a moje nemovitost“: vývoj BTC, vklady, cena nemovitosti, finanční pokrytí cíle.
+- 🧩 Interaktivní cílové rozložení Bitcoin / Ethereum / zlato / akcie / hotovost.
+- 📗 Import XLSX/CSV s mapováním sloupců, export vícelistého XLSX, JSON a CSV, PDF přes tisk.
+- 🔐 Registrace, e-mailové ověření do 24 h, obnovovací odkaz do 30 min, oznámení o registraci a administrace účtů. Vychází z Moje renta / Můj DIP.
+- 🎨 Tmavý prémiový design, barevná grafika, responzivní menu pro telefony.
 
-### Nasazení na Webkitty
-**Vložení do GitHubu samo o sobě nenasazuje web na doménu.** Postup krok za krokem je v [DEPLOYMENT.md](DEPLOYMENT.md). Web je určen pro `https://moje-krypto.jirijanousek.cz/`.
+## Přihlášení a ochrana dat
+Každá aplikace má **vlastní účty a vlastní databázi**. Existující hesla z Můj DIP nebo Moje renta se nepřenášejí. Správce používá ověřenou e-mailovou adresu vedenou v konfiguraci; hesla se nikdy nevkládají do GitHubu. Každý účet má oddělené portfolio i model bydlení. Přístup nového uživatele se aktivuje automaticky po ověření e-mailu, správce jej může později omezit nebo odebrat.
 
-### Kurzy a výnosy
-Tržní data jsou čerpána z CryptoCompare / CoinDesk Data. Starší historie a aktuální data mohou být dočasně omezená, proto aplikace při selhání zdroje nevymýšlí hodnoty. Převod do Trezoru není důkazem nákupu za zobrazenou cenu. Skutečný zisk se počítá až po zadání nákupních nákladů aktuálně drženého portfolia. Predikce jsou výhradně **scénáře**, nikoli investiční doporučení či garance.
+Web vyžaduje PHP 8.1+, PDO SQLite, správně nakonfigurované PHP mail(), HTTPS a Apache s .htaccess. Osobní data jsou na hostingu mimo veřejný kořen webu.
 
-### Soukromí
-Repozitář je veřejný. **Do repozitáře nepatří hesla, instalační klíče, transakce ani privátní klíče peněženek.** Osobní importní soubor se nahrává až do zabezpečené aplikace. Nikdy nezadávej seed nebo recovery phrase.
+## Důležité
+Tržní data dodává CryptoCompare / CoinDesk Data a mohou být zpožděná či nedostupná. Nemovitost, DCA, růst BTC a diverzifikace jsou **modely**, nikoli předpovědi, záruky či personalizovaná investiční doporučení. Převody na vlastní peněženku nejsou automaticky nové nákupy ani zisk. Aplikace neodesílá žádné pokyny k obchodování.
 
-### Automatická kontrola
-GitHub Actions provádí PHP a JavaScript syntaktickou kontrolu při aktualizaci větve main.
+**GitHub neznamená automatické nasazení na Webkitty.** Podrobný postup je v [DEPLOYMENT.md](DEPLOYMENT.md).
