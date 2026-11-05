@@ -26,3 +26,19 @@ Tato větev přidává přihlašování, registraci, ověření e-mailu a proces
 7. Admin účet: seznam, blokace a smazání účtu, ukončení sessions.
 
 Modely Bitcoinu nejsou investiční doporučení a nenabízejí zaručený výnos.
+
+## Obnovení správcovského účtu při nefunkčním e-mailu
+
+Soubor `cron/account-doctor.php` funguje **jen přes PHP CLI**. Webové načtení vrací 404, přístup do složky `cron/` blokuje také Apache.
+
+1. Před použitím aktualizujte GitHub `main` ve WebKitty a zkontrolujte správnou doménu.
+2. Ve WebKitty → Scheduled Tasks vložte do pole příkazu **dočasně**:
+   `/usr/bin/php84 /CESTA/KE/KORENI/moje-krypto/cron/account-doctor.php status`.
+   Klikněte na **Test Command**, nikoli na **Update**. Skript vypíše počet účtů, existenci správcovského účtu, ověření a dostupnost soukromé evidence. Nevypisuje hesla, hashe ani e-maily jiných uživatelů.
+3. Pokud správce existuje, spusťte jednorázově:
+   `/usr/bin/php84 /CESTA/KE/KORENI/moje-krypto/cron/account-doctor.php issue-link`.
+   Výstup obsahuje **tajný jednorázový odkaz** pro reset hesla nebo ověření účtu, platný 30 minut. Při novém spuštění se předchozí odkaz zneplatní. **Nesdílet výstup, nefotit a nikam nekopírovat kromě vlastního prohlížeče!**
+4. Po resetu se přihlaste na `/account.php?view=login`. Pokud správce v databázi neexistuje, použijte normální registraci a ověření e-mailu; stará portfolia nemazat. Nedostupné e-mailové potvrzení je samostatná chyba odesílání.
+5. **Vraťte původní příkaz Cronu, pokud existoval, a účetní diagnostiku NEPLÁNUJTE opakovaně**. Nesdělujte heslo ani jednorázový odkaz podpoře či v chatu.
+
+Změna je nedestruktivní: diagnostika nemění data, jednorázový odkaz pouze vytváří omezený token v účtové databázi, nemaže žádná uživatelská portfolia.
