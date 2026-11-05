@@ -5,5 +5,5 @@
  * Zvol nový náhodný instalační klíč s alespoň 20 znaky.
  */
 return [
-    'setup_token' => 'SEM_VLOZ_TVUJ_NOVY_NAHODNY_KLIC_NEJMENE_20_ZNAKU',
+    'setup_token' => '',
 ];
