@@ -1,6 +1,6 @@
 "use strict";
 (function(){
- const C=window.KryptoCharts,M=window.KryptoModels,$=id=>document.getElementById(id);
+ const C=window.KryptoCharts,M=window.KryptoModels,K=window.KryptoCost,$=id=>document.getElementById(id);
  const color={BTC:'#f7b450',ETH:'#9895ec',market:'#7eb4f2',custom:'#f6b962',inflation:'#ed858b',real:'#74d9a6'};
  const types={received:'📥 Přijato',sent:'📤 Odesláno',buy:'🛒 Nákup',sell:'💵 Prodej'};
  const fresh=()=>({assets:[{symbol:'BTC',quantity:0,costBasis:null},{symbol:'ETH',quantity:0,costBasis:null}],transactions:[]});
@@ -47,7 +47,13 @@
  }
  function asset(sym){return data.assets.find(x=>x.symbol===sym)||{quantity:0,costBasis:null};}
  function portfolio(){
-  const rows=['BTC','ETH'].map(sym=>({sym,amount:asset(sym).quantity,price:prices[sym]?.price??null,cost:asset(sym).costBasis}));
+  const rows=['BTC','ETH'].map(sym=>{
+   const item=asset(sym),derived=K.estimatedHoldingCost(data.transactions,sym,item.quantity);
+   const manual=item.costBasis;
+   return {sym,amount:item.quantity,price:prices[sym]?.price??null,
+    cost:manual!==null?manual:derived.cost,
+    costSource:manual!==null?'manual':derived.cost!==null?'estimated':'unknown'};
+  });
   for(const r of rows)r.value=r.price!==null?r.amount*r.price:null;
   const complete=rows.every(r=>r.amount===0||r.value!==null);
   return {rows,total:complete?rows.reduce((sum,r)=>sum+(r.value||0),0):null};
@@ -69,9 +75,14 @@
   const costKnown=owned.length&&owned.every(r=>r.cost!==null&&r.value!==null);
   const allCost=owned.reduce((sum,r)=>sum+(r.cost||0),0);
   const roi=costKnown&&allCost>0?(v.total/allCost-1)*100:null;
+  const estimated=owned.some(r=>r.costSource==='estimated');
+  $('portfolio-roi-label').textContent=estimated?'📊 Odhad zhodnocení':'📊 Moje skutečné zhodnocení';
   $('portfolio-roi').textContent=roi===null?'—':pct(roi);
   $('portfolio-roi').className=roi===null?'':roi>=0?'up':'down';
-  $('portfolio-roi-info').textContent=roi===null?'Vyžaduje skutečné nákupní ceny':'Hospodářský rozdíl '+money(v.total-allCost);
+  $('portfolio-roi-info').textContent=roi===null
+    ?'Chybí úplná historie, návaznost zůstatků nebo doložené náklady.'
+    :(estimated?'Odhad z hodnot převodů':'Podle zadaných pořizovacích nákladů')
+      +' · rozdíl '+money(v.total-allCost)+(estimated?' · není skutečný zisk':'');
   $('info-banner').style.display=(!data.transactions.length&&!owned.length)?'':'none';
   const shown=v.rows.filter(r=>r.value!==null&&r.value>0);
   const total=shown.reduce((s,r)=>s+r.value,0);let from=0,stops=[];
@@ -79,7 +90,8 @@
   $('donut').style.background=stops.length?'conic-gradient('+stops.join(',')+')':'#43525a';
   $('donut-amount').textContent=total?money(total):'—';
   $('donut-legend').innerHTML=shown.length?shown.map(r=>'<div class="donut-row"><span><i class="dot" style="background:'+color[r.sym]+'"></i>'+r.sym+'</span><b>'+fmt(r.value/total*100,1)+' %</b></div>').join(''):'<div class="empty">Nejprve přidej portfolio.</div>';
-  $('portfolio-summary').innerHTML=v.rows.map(r=>'<div class="summary-row"><span>'+r.sym+' · '+fmt(r.amount,8)+'</span><b>'+(r.value!==null?money(r.value):'—')+'</b></div>').join('');
+  $('portfolio-summary').innerHTML=v.rows.map(r=>'<div class="summary-row"><span>'+r.sym+' · '+fmt(r.amount,8)+'</span><b>'+(r.value!==null?money(r.value):'—')+'</b></div>'
+    +(r.amount>0&&r.cost!==null?'<div class="summary-row"><span>Průměr '+r.sym+' · '+(r.costSource==='estimated'?'odhad dle převodů':'zadané náklady')+'</span><b>'+money(r.cost/r.amount)+'</b></div>':'')).join('');
   if(data.transactions.length){
    const netBtc=data.transactions.filter(t=>t.symbol==='BTC').reduce((sum,t)=>sum+(received(t.type)?t.quantity:-t.quantity),0);
    const discrepancy=asset('BTC').quantity-netBtc;
@@ -99,8 +111,21 @@
   $('filter-year').innerHTML='<option value="all">Všechny roky</option>'+years.map(y=>'<option value="'+safe(y)+'">'+safe(y)+'</option>').join('');
   $('filter-year').value=years.includes(year)?year:'all';const yy=$('filter-year').value;
   const rows=ordered().filter(t=>(yy==='all'||t.date.startsWith(yy))&&(sym==='all'||t.symbol===sym));
-  $('transactions-body').innerHTML=rows.map(t=>'<tr><td>'+safe(t.date)+'</td><td>'+types[t.type]+'</td><td>'+safe(t.symbol)+'</td><td>'+fmt(t.quantity,8)+'</td><td>'+money(t.czk)+'</td><td><button class="small-btn" data-edit="'+safe(t.id)+'">Upravit</button><button class="small-btn delete" data-delete="'+safe(t.id)+'">Smazat</button></td></tr>').join('')||'<tr><td colspan="6" class="empty">Žádné transakce.</td></tr>';
-  $('transactions-footer').textContent='Počet zobrazených transakcí: '+rows.length+'. Částka v Kč je hodnota převodu, nikoli automaticky nákupní cena.';
+  $('transactions-body').innerHTML=rows.map(t=>{
+   const implied=K.impliedUnitPrice(t);
+   return '<tr><td>'+safe(t.date)+'</td><td>'+types[t.type]+'</td><td>'+safe(t.symbol)+'</td><td>'+fmt(t.quantity,8)+'</td><td>'+money(t.czk)+'</td>'
+     +'<td class="unit-price" title="Orientační kurz = částka převodu v Kč / přijaté množství; nemusí odpovídat nákupní ceně.">'
+     +(implied===null?'—':'≈ '+money(implied))+'</td>'
+     +'<td><button class="small-btn" data-edit="'+safe(t.id)+'">Upravit</button><button class="small-btn delete" data-delete="'+safe(t.id)+'">Smazat</button></td></tr>';
+  }).join('')||'<tr><td colspan="7" class="empty">Žádné transakce.</td></tr>';
+  const summary=K.transferTotals(rows);
+  $('transactions-summary').innerHTML=['BTC','ETH'].filter(sym=>summary[sym].count||summary[sym].missing).map(sym=>{
+   const r=summary[sym];
+   return '<tr class="transaction-total"><td colspan="3">Σ Přijaté převody '+sym+'</td><td>'+fmt(r.quantity,8)+'</td><td>'+money(r.czk)+'</td>'
+     +'<td class="unit-price">'+(r.average===null?'—':'≈ '+money(r.average))+'</td><td>'+r.count+' záznamů'+(r.missing?' · '+r.missing+' bez ceny':'')+'</td></tr>';
+  }).join('');
+  $('transactions-footer').textContent='Počet zobrazených transakcí: '+rows.length
+   +'. Vážený průměr = součet částek v Kč / součet přijatého množství. Hodnota při převodu není prokazatelná pořizovací cena; bez poplatků a kurzových rozdílů.';
   $('transactions-body').querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>openTransaction(data.transactions.find(t=>t.id===b.dataset.edit))));
   $('transactions-body').querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',async()=>{if(!confirm('Opravdu smazat tuto transakci?'))return;data.transactions=data.transactions.filter(t=>t.id!==b.dataset.delete);renderAll();await persist()}));
  }
@@ -312,8 +337,11 @@
  function exportJson(){download(JSON.stringify({...data,version:1,exportedAt:new Date().toISOString()},null,2),'moje-krypto-zaloha.json','application/json');notify('✅ Záloha JSON připravena.')}
  const quoted=s=>'"'+String(s??'').replace(/"/g,'""')+'"';
  function exportCsv(){
-  const columns=['date','symbol','type','quantity','czk','note'];
-  const rows=ordered().map(t=>columns.map(k=>quoted(['quantity','czk'].includes(k)?String(t[k]).replace('.',','):t[k])).join(';'));
+  const columns=['date','symbol','type','quantity','czk','note','implied_unit_czk'];
+  const rows=ordered().map(t=>columns.map(k=>quoted(
+   k==='implied_unit_czk'?(K.impliedUnitPrice(t)??''):
+   ['quantity','czk'].includes(k)?String(t[k]).replace('.',','):t[k]
+  )).join(';'));
   download('\uFEFF'+columns.join(';')+'\r\n'+rows.join('\r\n'),'moje-krypto-prevody.csv','text/csv;charset=utf-8');
   notify('✅ CSV transakcí připraveno.');
  }

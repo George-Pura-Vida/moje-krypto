@@ -16,7 +16,9 @@ jobs:
           for f in index.php market-data.php account.php admin.php auth/bootstrap.php auth/mail.php config.example.php; do php -l "$f"; done
       - name: JavaScript syntax
         run: |
-          for f in charts.js models.js data-tools.js app.js account.js; do node --check "$f"; done
+          for f in charts.js models.js data-tools.js cost-utils.js app.js account.js; do node --check "$f"; done
+      - name: Unit tests for transfer-derived costs
+        run: node --test cost-utils.test.cjs
       - name: Public repository has no private config
         run: |
           test ! -f config.local.php
