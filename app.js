@@ -144,6 +144,7 @@
   $('save-portfolio').addEventListener('click',savePortfolio);
   $('run-dca').addEventListener('click',runDca);
   $('calculate-forecast').addEventListener('click',runForecast);
+  $('use-history').addEventListener('click',applyHistoricalCagr);
   $('set-112').addEventListener('click',()=>{$('f-mid').value=112;runForecast();notify('112 % p. a. je pouze ilustrativní scénář.')});
   ['f-initial','f-monthly','f-years','f-inflation','f-low','f-mid','f-high'].forEach(id=>$(id).addEventListener('change',runForecast));
   $('export-json').addEventListener('click',exportJson);
@@ -251,9 +252,29 @@
     {name:'DCA + dip',color:color.real,points:out.chart.map(x=>[x[0],x[2]])},
     {name:'Vloženo DCA',color:color.custom,points:out.chart.map(x=>[x[0],x[3]]),dashed:true}
    ],{title:'Vývoj DCA a nákupů při poklesu v CZK'});
+   C.draw('dca-price-chart',[
+    {name:'Kurz '+c,color:color.market,points:out.chart.map(x=>[x[0],x[7]])},
+    {name:'Průměr DCA',color:color.custom,points:out.chart.map(x=>[x[0],x[5]])},
+    {name:'Průměr s dipem',color:color.real,points:out.chart.map(x=>[x[0],x[6]])}
+   ],{title:'Průměrné nákupní ceny za jednotku v Kč'});
    $('dca-chart').dataset.done='1';
    $('dca-foot').textContent=C.date(out.from)+' až '+C.date(out.to)+' · extra kapitál na dip '+money(out.dipSpent-out.regularSpent)+(h.partial?' · ⚠️ historie kratší než požadované období':'')+'. Bez poplatků, daní a skluzu.';
   }catch(e){C.empty('dca-chart','Výpočet není dostupný.');$('dca-results').innerHTML='<div class="empty">⚠️ '+safe(e.message)+'</div>';$('dca-foot').textContent='';}
+ }
+ async function applyHistoricalCagr(){
+  const coin=$('f-history-coin').value;
+  const note=$('f-history-note');
+  note.textContent='⏳ Načítám historii…';
+  try{
+   const h=await getHistory(coin,'15Y');
+   const first=h.points[0],last=h.points[h.points.length-1],years=(last[0]-first[0])/(365.2425*86400);
+   if(years<0.2)throw Error('Není dostatek historických dat pro výpočet.');
+   const cagr=(Math.pow(last[1]/first[1],1/years)-1)*100;
+   $('f-mid').value=cagr.toFixed(2);
+   runForecast();
+   note.textContent=' Historie '+C.date(first[0])+'–'+C.date(last[0])+', CAGR '+pct(cagr)+(h.partial?' (neúplné období)':'');
+   notify('Historický CAGR je modelová vstupní hodnota, nikoli předpověď budoucnosti.');
+  }catch(e){note.textContent=' ⚠️ '+e.message;}
  }
  function runForecast(){
   const res=M.forecast({initial:n('f-initial',100000),monthly:n('f-monthly',3000),years:n('f-years',10),inflation:n('f-inflation',2),rates:[n('f-low',-15),n('f-mid',12),n('f-high',25)]});
