@@ -1,0 +1,61 @@
+:root{color-scheme:light;--support-navy:#17263d;--support-wine:#80324d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 95% 0,#fff2d2 0,transparent 55%),#f8f6f2;color:#263344;font:15px/1.55 system-ui,-apple-system,'Segoe UI',sans-serif}
+button,input{font:inherit}a{color:#815719}a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #cc9e42;outline-offset:3px}
+.support-page-header{max-width:1220px;margin:auto;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.support-brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:#17263d;font-weight:900;font-size:21px;line-height:1.15}
+.support-brand strong{color:#bc8b36}.support-brand small{display:block;font-size:11px;color:#708092;font-weight:550;margin-top:3px}
+.support-brand-icon{background:#ffb23d;display:grid;place-items:center;color:#17263d;font-size:29px;width:48px;height:48px;border-radius:12px}
+.support-page-header nav{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.support-page-header nav a{padding:10px 12px;border:1px solid #dfd8ce;background:#fff;color:#34445a;border-radius:11px;text-decoration:none;font-weight:750;font-size:13px;min-height:44px;display:inline-flex;align-items:center}
+.support-page-header nav .support-active{background:#80324d;border-color:#80324d;color:#fff;box-shadow:0 6px 17px #80324d35}
+.support-page-footer{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;padding:22px;border-top:1px solid #e2d8c3;margin:auto;max-width:1140px;font-size:13px}
+.eyebrow{color:#9a752e;font-weight:850;letter-spacing:1.2px;font-size:12px}
+.support-layout{max-width:1160px;padding:0 24px 40px;margin:30px auto;color:#352b1d}.support-heading{text-align:center;max-width:760px;margin:30px auto}.support-heading h1{font-size:clamp(32px,5vw,52px);line-height:1.15;margin:15px 0 20px}.support-heading h1 span{color:#9c752e}.support-heading>p{line-height:1.7}.support-heading .voluntary{font-weight:600;color:#5d542d}.support-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}.support-card{padding:30px;background:#fffefa;border:1px solid #d9c59a;border-radius:20px;box-shadow:0 12px 40px #4a34100a;min-width:0}.support-card h2{font-size:28px;margin:0 0 14px}.support-card p{line-height:1.65}.amount-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:25px 0}.amount-options button,.payment-actions button{font:600 14px Arial,sans-serif;border:1px solid #c8ac73;border-radius:9px;padding:14px 6px;color:#513b17;background:#fff9eb;cursor:pointer;min-height:48px}.amount-options button[aria-pressed=true]{background:#563322;color:#fff;border-color:#563322}.support-card .field{margin-top:18px}.support-card input{width:100%;box-sizing:border-box}.small{font-size:13px;line-height:1.6;color:#73674e}.support-purpose{margin-top:28px;background:#f8efd9;padding:18px;border-radius:12px}.support-purpose h3{margin:0;font-size:17px}.support-purpose p{font-size:14px;margin-bottom:0}.skip{display:block;margin-top:24px;font-weight:600;line-height:1.6}.selected-amount{display:flex;justify-content:space-between;align-items:center;gap:15px;background:#f4ead2;border-radius:12px;padding:18px;margin:20px 0}.selected-amount strong{color:#77501b;font-size:28px}.payment-qr{width:254px;max-width:100%;margin:20px auto;background:#fff;padding:8px;border:1px solid #e3dac7;border-radius:12px;box-sizing:border-box}.payment-qr svg{width:100%;height:auto;display:block}.qr-help{text-align:center;font-size:13px}.payment-actions{display:flex;gap:8px;flex-wrap:wrap}.payment-actions button{flex:1 1 160px}.bank-details{display:grid;grid-template-columns:110px minmax(0,1fr);font-size:14px;gap:12px;margin:26px 0;line-height:1.5}.bank-details dt{color:#73674e}.bank-details dd{margin:0;font-weight:600;overflow-wrap:anywhere}.payment-error{color:#a42d28;min-height:0}.payment-error:empty{display:none}.support-footer{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;font-size:13px;margin-top:35px;padding-top:22px;border-top:1px solid #d9c59a}.activation-success{padding:22px 26px;border:1px solid #a9c69d;background:#f0f7ec;border-radius:14px}.activation-success strong{font-size:19px}.activation-success p{line-height:1.6}.continue{display:inline-block;background:#7b2938;border-radius:9px;color:white;padding:13px 18px;text-decoration:none;font-weight:600}.support-card [hidden]{display:none!important}@media(max-width:760px){.support-grid{grid-template-columns:minmax(0,1fr)}.support-layout{padding:0 16px 30px}.support-card{padding:24px 20px}.support-heading{margin:24px 0}.support-heading h1{font-size:34px}.bank-details{grid-template-columns:95px minmax(0,1fr)}}@media(max-width:380px){.amount-options{grid-template-columns:repeat(2,minmax(0,1fr))}.selected-amount{flex-wrap:wrap}}
+
+/* Potvrzení dobrovolného daru: světlý, přístupný formulář a viditelný VS. */
+.donation-thanks{margin:25px 0;padding:20px;border:1px solid #e3c682;background:#fff7e3;border-radius:14px}
+.donation-thanks h3{font-size:19px;margin:0 0 8px;color:#6b4916}
+.donation-thanks p{font-size:14px;margin:8px 0 14px;line-height:1.6}
+.donation-thanks .field{display:block;margin-top:14px}
+.donation-thanks .field span{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
+.donation-thanks .field input{height:45px;padding:10px 12px;border:1px solid #bba16b;border-radius:9px;background:#fff;color:#252018;font-size:15px}
+.donation-thanks .field input:focus-visible,.donation-prepare:focus-visible{outline:3px solid #976720;outline-offset:2px}
+.donation-consent{display:flex;align-items:flex-start;gap:10px;margin:20px 0;line-height:1.5;font-size:14px}
+.support-card .donation-consent input{width:20px;min-width:20px;height:20px;margin:1px 0;accent-color:#84541c}
+.donation-prepare{display:block;width:100%;min-height:48px;background:#77501b;border:0;border-radius:10px;color:white;font-weight:700;cursor:pointer;padding:12px 16px;font-size:15px}
+.donation-prepare:hover{background:#5d3a13}
+.donation-prepare:disabled{opacity:.55;cursor:wait}
+.donation-vs{background:#eef7ed;border:1px solid #9dbb9b;border-radius:9px;padding:12px;font-size:15px;text-align:center;color:#285b2e}
+.donation-vs strong{font-size:20px;letter-spacing:1px}
+#donationFeedback{font-weight:600;color:#664618;min-height:1em}
+@media(max-width:760px){.donation-thanks{padding:16px}.donation-vs strong{font-size:19px}}
+
+/* Preferované darování s e-mailem. Anonymní QR až po vědomé volbě. */
+.donation-thanks{margin:22px 0 16px;padding:24px;border:2px solid #c89b42;background:linear-gradient(155deg,#fff7e3,#fffdf6);box-shadow:0 8px 24px #8d66111a}
+.donation-recommended{display:inline-block;margin-bottom:10px;padding:6px 10px;border-radius:100px;background:#efe0bc;color:#62420c;font-size:12px;font-weight:800}
+.donation-thanks h3{font-size:clamp(19px,2vw,23px);line-height:1.25}
+.anonymous-choice{padding:15px 18px;margin:14px 0 0;border:1px solid #cfc4b1;border-radius:12px;background:#faf8f3}
+.anonymous-choice summary{cursor:pointer;font-size:15px;font-weight:700;color:#554736;line-height:1.5}
+.anonymous-choice summary:focus-visible,.anonymous-prepare:focus-visible{outline:3px solid #976720;outline-offset:3px}
+.anonymous-choice p{font-size:14px;color:#5b5347;margin:12px 0}
+.anonymous-prepare{border:1px solid #9a8163;background:#fffefa;color:#513b21;border-radius:9px;font-size:14px;font-weight:700;min-height:46px;padding:10px 16px;cursor:pointer;width:100%}
+.anonymous-prepare:hover{background:#f0e6d8}
+.payment-placeholder{padding:24px 20px;margin:22px 0;text-align:center;border:2px dashed #d5b46e;border-radius:16px;background:#fff8e9}
+.payment-placeholder strong{font-size:17px;color:#684813;line-height:1.5}
+.payment-placeholder p{font-size:14px;color:#64543a;margin:12px 0 0;line-height:1.65}
+.payment-placeholder p strong{font-size:inherit}
+.payment-card{position:relative}
+@media(max-width:760px){.donation-thanks{padding:19px 17px}.payment-placeholder{padding:20px 14px}.anonymous-choice{padding:14px}}
+
+.support-layout{padding:0 16px 40px}
+.support-heading{margin:12px auto 30px}
+.support-card{background:#fff}
+.support-card .field{display:block;margin-top:16px;font-weight:700}
+.support-card .field>span{display:block;margin-bottom:7px}
+.support-card input:not([type=checkbox]){display:block;width:100%;font:inherit;min-height:45px;padding:10px 12px;border:1px solid #c9b992;border-radius:9px;background:#fff}
+.donation-thanks .field input{width:100%}
+.support-card .donation-consent input{width:20px;flex:0 0 20px;min-width:20px}
+.donation-consent span{flex:1}
+.support-card .skip{color:#68471b}
+.support-card [hidden]{display:none!important}
+@media(max-width:760px){.support-page-header{align-items:flex-start;flex-direction:column;padding:14px}.support-page-header nav{width:100%}.support-page-header nav a{flex:1;justify-content:center}.support-page-header nav .support-active{flex-basis:100%}.support-heading{margin:16px 0}.support-layout{padding:0 14px 30px}}
