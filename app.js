@@ -86,6 +86,13 @@
   $('donut-amount').textContent=total?money(total):'—';
   $('donut-legend').innerHTML=shown.length?shown.map(r=>'<div class="donut-row"><span><i class="dot" style="background:'+color[r.sym]+'"></i>'+r.sym+'</span><b>'+fmt(r.value/total*100,1)+' %</b></div>').join(''):'<div class="empty">Nejprve přidej portfolio.</div>';
   $('portfolio-summary').innerHTML=v.rows.map(r=>'<div class="summary-row"><span>'+r.sym+' · '+fmt(r.amount,8)+'</span><b>'+(r.value!==null?money(r.value):'—')+'</b></div>').join('');
+  if(data.transactions.length){
+   const netBtc=data.transactions.filter(t=>t.symbol==='BTC').reduce((sum,t)=>sum+(received(t.type)?t.quantity:-t.quantity),0);
+   const discrepancy=asset('BTC').quantity-netBtc;
+   $('portfolio-summary').innerHTML+='<div class="summary-row"><span>🔎 Evidovaný čistý tok BTC</span><b>'+fmt(netBtc,8)+' BTC</b></div>'
+     +'<div class="summary-row"><span>Rozdíl toku proti zůstatku</span><b>'+fmt(discrepancy,8)+' BTC</b></div>';
+  }
+
   const years=[2025,2026],vals=years.map(annual),max=Math.max(1,...vals);
   $('annual-bars').innerHTML=years.map((y,i)=>'<div class="annual-column"><b>'+money(vals[i])+'</b><div class="bar" style="height:'+Math.max(2,vals[i]/max*100)+'px"></div><strong>'+y+'</strong></div>').join('');
   const monthCount=new Date().getFullYear()===2026?new Date().getMonth()+1:12;
