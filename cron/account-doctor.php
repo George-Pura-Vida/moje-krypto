@@ -7,6 +7,7 @@ declare(strict_types=1);
  *
  * php84 cron/account-doctor.php status
  * php84 cron/account-doctor.php issue-link
+ * php84 cron/account-doctor.php bootstrap-owner   (only if no accounts exist)
  *
  * No user data, password hash, or tokens are printed during the default check.
  * The optional one-time link is shown only in the hosting owner's CLI output;
@@ -20,8 +21,8 @@ ini_set('display_errors', '0');
 require_once dirname(__DIR__) . '/auth/bootstrap.php';
 
 $mode = $argv[1] ?? 'status';
-if (!in_array($mode, ['status', 'issue-link'], true)) {
-    fwrite(STDERR, "Use: php account-doctor.php [status|issue-link]\n");
+if (!in_array($mode, ['status', 'issue-link', 'bootstrap-owner'], true)) {
+    fwrite(STDERR, "Use: php account-doctor.php [status|issue-link|bootstrap-owner]\n");
     exit(2);
 }
 try {
@@ -30,6 +31,45 @@ try {
     $stmt->execute([AUTH_APPROVER_EMAIL]);
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
     $accounts = (int) $db->query('SELECT COUNT(*) FROM users')->fetchColumn();
+    if ($mode === 'bootstrap-owner') {
+        // Server-owner-only first install. No account overwrite, no known password.
+        // A random inaccessible password is used until the owner sets a new one
+        // through the one-time 30-minute reset link printed locally below.
+        if ($accounts !== 0 || $admin !== false) {
+            echo "Účetní databáze již obsahuje účet. Inicializace byla zastavena bez změn.\n";
+            echo "Pro existujícího správce použijte režim issue-link.\n";
+            exit(4);
+        }
+        $db->exec('BEGIN IMMEDIATE');
+        try {
+            if ((int)$db->query('SELECT COUNT(*) FROM users')->fetchColumn() !== 0) {
+                throw new DomainException('Databáze již obsahuje účet. Inicializace je zakázána.');
+            }
+            $now = time();
+            $randomPassword = bin2hex(random_bytes(48));
+            $hash = password_hash($randomPassword, PASSWORD_DEFAULT);
+            unset($randomPassword);
+            if (!is_string($hash) || $hash === '') throw new RuntimeException('Heslo nelze bezpečně zahashovat.');
+            $create = $db->prepare("INSERT INTO users
+                (email,password_hash,first_name,last_name,company,ico,dic,phone,address,verified,
+                 approval_status,approved_at,created_at,updated_at)
+                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            $create->execute([
+                AUTH_APPROVER_EMAIL, $hash, 'Správce', 'Moje krypto',
+                '', '', '', '', '', 1, 'approved', $now, $now, $now
+            ]);
+            $ownerId = (int)$db->lastInsertId();
+            $db->exec('COMMIT');
+        } catch (Throwable $e) {
+            $db->exec('ROLLBACK');
+            throw $e;
+        }
+        $stmt->execute([AUTH_APPROVER_EMAIL]);
+        $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+        $accounts = (int)$db->query('SELECT COUNT(*) FROM users')->fetchColumn();
+        echo "První správcovský účet byl bezpečně vytvořen. "
+           . "Heslo zatím nelze použít – nastavte si vlastní pomocí odkazu níže.\n";
+    }
     $verified = $admin !== false && (int)$admin['verified'] === 1;
     $allowed = $admin !== false && auth_approved($admin);
     $private = auth_dir();
@@ -47,7 +87,7 @@ try {
     echo "Staré portfolio (migrace): " .
         (is_file(dirname(__DIR__) . '/storage/data.php') ? 'k dispozici' : 'nenalezeno') . "\n";
 
-    if ($mode === 'issue-link') {
+    if ($mode === 'issue-link' || $mode === 'bootstrap-owner') {
         if ($admin === false) {
             echo "Obnovu nelze spustit: účet správce neexistuje. Použijte standardní registraci "
                . "a potvrzení e-mailu. Staré portfolio nemažte.\n";
