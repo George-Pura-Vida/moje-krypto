@@ -17,7 +17,7 @@ test('email-first Fio support and opt-in anonymous QR are displayed',async()=>{
  assert.match(html,/<a[^>]*href="\/account\.php\?view=privacy"/);
  assert.match(js,/https:\/\/muj-dip\.jirijanousek\.cz\/donation-intent-cross\.php/);
  assert.match(js,/credentials:'omit'/);
- assert.doesNotMatch(js,/FIO_TOKEN|<escape>token\s*[:=]\s*["']/);
+ assert.doesNotMatch(js,/FIO_TOKEN|FIO_SECRET|PRIVATE_KEY/);
  assert.match(js,/variableSymbol/);
  assert.match(js,/qrMode='none'/);
  assert.match(js,/qrMode='linked'/);
