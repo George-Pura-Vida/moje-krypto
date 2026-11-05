@@ -11,7 +11,7 @@
 Přes správce souborů Webkitty, SFTP nebo Git:
 1. Nahraj soubory `index.php`, `style.css`, `charts.js`, `models.js`, `app.js`, `favicon.svg` a `.htaccess` přímo do kořenového adresáře domény `moje-krypto`.
 2. Nahraj `storage/.htaccess` do podsložky `storage`.
-3. V kořenovém adresáři musí být `index.php` – ne ve vnořené složce `moje-krypto/moje-krypto`.
+3. V kořenovém adresáři musí být `index.php` – ne ve vnořené složce `moje-krypto/moje-krypto`. Pokud existuje starý výchozí `index.html`, odstraň nebo přejmenuj jej; na Apache přepíná `.htaccess` prioritu na `index.php`.
 4. Ve Webkitty nastav dokumentový kořen přesně na složku s `index.php` (již vytvořená složka se musí použít správně).
 5. Ověř, že na doméně běží PHP a platný certifikát HTTPS.
 
