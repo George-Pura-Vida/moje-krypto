@@ -25,7 +25,7 @@
   return {assets,transactions};
  }
  async function init(){
-  setupEvents();runForecast();window.addEventListener('resize',fitNumbers);
+  setupEvents();setupAppearance();runForecast();window.addEventListener('resize',fitNumbers);
   try{const res=await fetch('?api=data',{credentials:'same-origin'});const json=await res.json();if(!res.ok)throw Error(json.error||'Načtení dat selhalo');data=validate(json.data);}
   catch(e){notify('⚠️ '+e.message)}
   renderAll();await refreshPrices();
@@ -87,10 +87,10 @@
      +'<div class="summary-row"><span>Rozdíl toku proti zůstatku</span><b>'+fmt(discrepancy,8)+' BTC</b></div>';
   }
 
-  const years=[2025,2026],vals=years.map(annual),max=Math.max(1,...vals);
-  $('annual-bars').innerHTML=years.map((y,i)=>'<div class="annual-column"><b>'+money(vals[i])+'</b><div class="bar" style="height:'+Math.max(2,vals[i]/max*100)+'px"></div><strong>'+y+'</strong></div>').join('');
-  const monthCount=new Date().getFullYear()===2026?new Date().getMonth()+1:12;
-  $('annual-totals').innerHTML=years.map((y,i)=>'<div class="summary-row"><span>'+y+' · průměr za '+(y===2026?monthCount:12)+' měsíců</span><b>'+money(vals[i]/(y===2026?monthCount:12))+' / měs.</b></div>').join('');
+  C.annual('annual-bars',data.transactions,$('annual-type').value);
+  const currentYear=new Date().getFullYear(),monthCount=new Date().getMonth()+1,years=[...new Set(data.transactions.map(t=>Number(t.date.slice(0,4))))].sort();
+  $('annual-totals').innerHTML=years.map(y=>'<div class="summary-row"><span>'+y+(y===currentYear?' · neuzavřený rok, k '+new Date().toLocaleDateString('cs-CZ'):' · uzavřený rok')+'</span><b>'+money(annual(y))+'</b></div>').join('');
+  $('donut').classList.toggle('pie-mode',$('allocation-type').value==='pie');
   $('recent-transactions').innerHTML=ordered().slice(0,5).map(t=>'<div class="recent"><div class="recent-left"><span class="coin-icon '+(t.symbol==='ETH'?'eth':'')+'">'+(t.symbol==='BTC'?'₿':'◆')+'</span><div><b>'+types[t.type]+' '+t.symbol+'</b><small>'+safe(t.date)+' · '+fmt(t.quantity,8)+' '+t.symbol+'</small></div></div><div class="recent-right '+(received(t.type)?'up':'down')+'">'+(received(t.type)?'+':'−')+money(t.czk)+'</div></div>').join('')||'<div class="empty">Žádné evidované transakce.</div>';
  }
  function renderTransactions(){
@@ -150,6 +150,8 @@
   $('use-history').addEventListener('click',applyHistoricalCagr);
   $('set-112').addEventListener('click',()=>{$('f-mid').value=112;runForecast();notify('112 % p. a. je pouze ilustrativní scénář.')});
   ['f-initial','f-monthly','f-years','f-inflation','f-low','f-mid','f-high'].forEach(id=>$(id).addEventListener('change',runForecast));
+  document.querySelectorAll('[data-chart-mode]').forEach(select=>select.addEventListener('change',()=>{document.querySelectorAll('[data-chart-mode]').forEach(x=>x.value=select.value);if(page==='dashboard'||page==='markets')refreshChart();if(page==='strategies')runDca();if(page==='forecast')runForecast();}));
+  $('annual-type').addEventListener('change',renderDashboard);$('allocation-type').addEventListener('change',renderDashboard);
   $('export-json').addEventListener('click',exportJson);
   $('export-xlsx').addEventListener('click',exportExcel);
   $('paste-import').addEventListener('click',()=>{$('paste-data').value='';$('paste-dialog').showModal()});
@@ -216,7 +218,7 @@
   if($('show-inflation').checked)lines.push({name:'Inflace',color:color.inflation,points:model.map(x=>[x[0],x[3]]),dashed:true});
   if($('show-real').checked)lines.push({name:'Trh reálně',color:color.real,points:model.map(x=>[x[0],x[4]])});
   C.draw('market-chart',lines,{percent:true,tall:true,title:'Index kumulativního procentního výnosu'});
-  $('market-chart-footer').textContent='Všechny křivky ukazují celkovou změnu v % od '+C.date(a[0])+' do '+C.date(b[0])+'. '+h.points.length+' bodů · Zdroj '+h.source+(h.partial?' · ⚠️ Požadovaný časový rozsah není úplný':'')+(h.stale?' · archivní cache':'');
+  $('market-chart-footer').textContent='Všechny křivky ukazují celkovou změnu v % od '+C.date(a[0])+' do '+C.date(b[0])+'. '+h.points.length+' bodů · Zdroj '+h.source+(h.fxCurrent?' · ⚠️ Výnos v USD; dnešní přepočet CZK, nikoli historický korunový výnos.':'')+(h.partial?' · ⚠️ Požadovaný časový rozsah není úplný':'')+(h.stale?' · archivní cache':'');
  }
  function openTransaction(t){
   edited=t?.id||null;$('modal-title').textContent=t?'Upravit transakci':'Nová transakce';
@@ -269,7 +271,7 @@
     {name:'Průměr s dipem',color:color.real,points:out.chart.map(x=>[x[0],x[6]])}
    ],{title:'Průměrné nákupní ceny za jednotku v Kč'});
    $('dca-chart').dataset.done='1';
-   $('dca-foot').textContent=C.date(out.from)+' až '+C.date(out.to)+' · extra kapitál na dip '+money(out.dipSpent-out.regularSpent)+(h.partial?' · ⚠️ historie kratší než požadované období':'')+'. Bez poplatků, daní a skluzu.';
+   $('dca-foot').textContent=C.date(out.from)+' až '+C.date(out.to)+' · Zdroj '+h.source+' · extra kapitál na dip '+money(out.dipSpent-out.regularSpent)+(h.fxCurrent?' · Model s konstantním dnešním USD/CZK':'')+(h.partial?' · ⚠️ historie kratší než požadované období':'')+'. Bez poplatků, daní a skluzu.';
   }catch(e){C.empty('dca-chart','Výpočet není dostupný.');$('dca-results').innerHTML='<div class="empty">⚠️ '+safe(e.message)+'</div>';$('dca-foot').textContent='';}
  }
  async function applyHistoricalCagr(){
@@ -283,7 +285,7 @@
    const cagr=(Math.pow(last[1]/first[1],1/years)-1)*100;
    $('f-mid').value=cagr.toFixed(2);
    runForecast();
-   note.textContent=' Historie '+C.date(first[0])+'–'+C.date(last[0])+', CAGR '+pct(cagr)+(h.partial?' (neúplné období)':'');
+   note.textContent=' Historie '+C.date(first[0])+'–'+C.date(last[0])+', CAGR '+pct(cagr)+(h.partial?' (neúplné období)':'')+(h.fxCurrent?' · CAGR v USD, nikoli historický výnos CZK':'');
    notify('Historický CAGR je modelová vstupní hodnota, nikoli předpověď budoucnosti.');
   }catch(e){note.textContent=' ⚠️ '+e.message;}
  }
@@ -342,6 +344,14 @@
   html+=ordered().map(t=>'<tr><td>'+safe(t.date)+'</td><td>'+safe(types[t.type])+'</td><td>'+t.symbol+'</td><td>'+fmt(t.quantity,10)+'</td><td>'+money(t.czk)+'</td><td>'+safe(t.note)+'</td></tr>').join('')+'</tbody></table><p>Hodnoty převodů nejsou pořizovací náklady. Neznámé náklady zůstávají nevyplněné. Report není daňovým výpočtem.</p>';
   if($('goal-results').textContent)html+='<h2>Cesta k cíli · model</h2>'+$('goal-results').innerHTML+'<p>'+safe($('goal-foot').textContent)+'</p>';
   $('print-report').innerHTML=html;window.print();
+ }
+
+ function setupAppearance(){
+  const presets={ocean:{bg:'#0d2450',text:'#eaf0ff',accent:'#ffbd63'},emerald:{bg:'#0c302d',text:'#e9faf3',accent:'#75dfbd'},amethyst:{bg:'#2b1b4b',text:'#f5edff',accent:'#d5adff'},pearl:{bg:'#eef3fa',text:'#163253',accent:'#975406'}};
+  const mix=(a,b,t)=>'#'+[1,3,5].map(i=>Math.round(parseInt(a.slice(i,i+2),16)*(1-t)+parseInt(b.slice(i,i+2),16)*t).toString(16).padStart(2,'0')).join('');
+  const lum=hex=>{const p=[1,3,5].map(i=>{const c=parseInt(hex.slice(i,i+2),16)/255;return c<=.04045?c/12.92:Math.pow((c+.055)/1.055,2.4)});return .2126*p[0]+.7152*p[1]+.0722*p[2]};
+  function apply(name,custom){const p=custom||presets[name]||presets.ocean;if(!/^#[0-9a-f]{6}$/i.test(p.bg)||!/^#[0-9a-f]{6}$/i.test(p.text))return;const light=lum(p.bg)>.45,accent=p.accent||(light?'#975406':'#ffbd63'),styles={'--bg':p.bg,'--sidebar':mix(p.bg,light?'#ffffff':'#000000',.16),'--panel':mix(p.bg,'#ffffff',light?.8:.08),'--surface':mix(p.bg,'#ffffff',light?.5:.13),'--line':mix(p.bg,p.text,.24),'--text':p.text,'--muted':mix(p.text,p.bg,.27),'--gold':accent,'--gold2':accent};for(const [key,value] of Object.entries(styles))document.documentElement.style.setProperty(key,value);document.documentElement.dataset.theme=light?'light':'dark';$('theme-preset').value=name;$('theme-background').value=p.bg;$('theme-text').value=p.text;const contrast=(Math.max(lum(p.bg),lum(p.text))+.05)/(Math.min(lum(p.bg),lum(p.text))+.05);$('theme-contrast').textContent=contrast<4.5?'Pozadí a text mají nízký kontrast. Pro lepší čitelnost zvol světlejší text nebo tmavší pozadí.':'Kontrast textu a pozadí: '+contrast.toFixed(1)+' : 1';try{localStorage.setItem('moje-krypto-appearance',JSON.stringify({name,...p}))}catch{}}
+  $('theme-preset').addEventListener('change',()=>{const name=$('theme-preset').value;if(name!=='custom')apply(name)});document.querySelectorAll('[data-theme]').forEach(b=>b.addEventListener('click',()=>apply(b.dataset.theme)));['theme-background','theme-text'].forEach(id=>$(id).addEventListener('input',()=>apply('custom',{bg:$('theme-background').value,text:$('theme-text').value})));$('theme-reset').addEventListener('click',()=>apply('ocean'));let saved;try{saved=JSON.parse(localStorage.getItem('moje-krypto-appearance'))}catch{}apply(saved?.name||'ocean',saved);
  }
 
  init();
