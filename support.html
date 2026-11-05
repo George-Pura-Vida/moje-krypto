@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="cs"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Dobrovolná podpora rozvoje aplikace Moje krypto. Platba QR kódem a volitelné e-mailové poděkování po připsání příspěvku.">
+<title>Podpořte projekt Moje krypto · Jiří Janoušek</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/support.css?v=5">
+<script type="module" src="/support.js?v=5"></script>
+<link rel="stylesheet" href="/privacy.css?v=2"><script type="module" src="/privacy.js?v=2"></script></head><body>
+<header class="support-page-header">
+<a class="support-brand" href="/"><span class="support-brand-icon">₿</span><span>MOJE <strong>KRYPTO</strong><small>Jiří Janoušek</small></span></a>
+<nav aria-label="Navigace podpory"><a href="/">📊 Aplikace</a><a href="/account.php?view=login">👤 Přihlášení</a><a class="support-active" href="/support.html" aria-current="page">❤️ Podpořte projekt</a></nav>
+</header>
+<main class="support-layout">
+<div class="support-heading">
+<p class="eyebrow">SPOLEČNĚ ROZVÍJÍME MOJE KRYPTO</p>
+<h1>💛 Podpořte rozvoj<br><span>aplikace Moje krypto</span></h1>
+<p>Pomáhá Vám aplikace sledovat Bitcoin, Ethereum a vaše investiční cíle? Dobrovolným příspěvkem podpoříte provoz a nové funkce.</p>
+<p class="voluntary">Příspěvek je dobrovolný a není podmínkou používání aplikace.</p>
+</div>
+<div class="support-grid"><section class="support-card"><h2>Vyberte částku</h2><p>Každá podpora pomáhá. Děkujeme Vám. 💛</p><div class="amount-options" role="group" aria-label="Výběr částky"><button type="button" data-amount="100" aria-pressed="false">100 Kč</button><button type="button" data-amount="250" aria-pressed="false">250 Kč</button><button type="button" data-amount="500" aria-pressed="false">500 Kč</button><button type="button" data-amount="1000" aria-pressed="false">1 000 Kč</button></div><label class="field" for="supportAmount"><span>Vlastní částka v Kč</span><input id="supportAmount" type="text" inputmode="decimal" value="250" maxlength="12" aria-describedby="amountHint paymentError" autocomplete="off"></label><p id="amountHint" class="small">Můžete zadat i vlastní částku od 1 Kč, nejvýše se dvěma desetinnými místy.</p><p id="paymentError" class="payment-error" role="alert"></p><section class="donation-thanks" aria-label="Potvrzení příspěvku e-mailem">
+<span class="donation-recommended">✉️ Doporučená možnost</span><h3>📧 Příspěvek s poděkováním e-mailem</h3>
+<p>Zadejte e-mail, vyberte částku a připravte si osobní platební QR kód. Až banka potvrdí připsání platby, pošleme Vám jednorázové poděkování. 💛</p>
+<label class="field" for="donorName"><span>Vaše jméno (nepovinné)</span><input id="donorName" type="text" maxlength="80" autocomplete="name" placeholder="Například Jana"></label>
+<label class="field" for="donorEmail"><span>E-mail pro poděkování</span><input id="donorEmail" type="email" maxlength="254" autocomplete="email" placeholder="vas@email.cz"></label>
+<label class="donation-consent"><input id="donorConsent" type="checkbox"> <span>Chci na uvedený e-mail obdržet jednorázové potvrzení a poděkování za přijatý příspěvek. Nejde o přihlášení k reklamním sdělením.</span></label>
+<button id="prepareThanks" class="donation-prepare" type="button">💛 Vytvořit QR platbu s poděkováním</button>
+<p id="donationFeedback" role="status" aria-live="polite" class="small"></p>
+<p class="small">E-mail používáme jen k jednorázovému poděkování, nikoli pro reklamu. <a href="/account.php?view=privacy">Ochrana osobních údajů</a>.</p>
+</section><details class="anonymous-choice" id="anonymousChoice"><summary>🔒 Chci přispět anonymně bez e-mailu</summary><p>Vytvoříme běžný QR kód bez variabilního symbolu a bez automatického poděkování dárci. Správce dostane oznámení o platbě z banky.</p><button type="button" id="prepareAnonymous" class="anonymous-prepare">Vytvořit anonymní QR kód</button></details><div class="support-purpose"><h3>Na co příspěvek použiji?</h3><p>Na nové funkce, údržbu a provoz aplikace, testování výpočtů a pohodlnější používání na počítači i mobilu.</p></div><a class="skip" href="/">Pokračovat do aplikace bez příspěvku →</a></section>
+<section class="support-card payment-card"><h2>Vaše QR platba</h2><div id="paymentPlaceholder" class="payment-placeholder"><strong>📱 QR kód připravíme podle Vaší volby</strong><p>Pro poděkování vyplňte e-mail a klikněte na <strong>„Vytvořit QR platbu s poděkováním“</strong>. Pokud preferujete anonymitu, rozbalte vlevo anonymní příspěvek.</p></div><div id="paymentPreview" hidden><div class="selected-amount"><span>Váš příspěvek</span><strong id="selectedAmount"></strong></div><p id="paymentVsLine" class="donation-vs" hidden>Variabilní symbol: <strong id="selectedVs"></strong></p><div id="paymentQr" class="payment-qr"></div><p class="qr-help">Naskenujte QR kód v bankovní aplikaci a před potvrzením zkontrolujte platební údaje.</p><p id="paymentMode" class="small">Anonymní QR platba: bez automatického poděkování e-mailem.</p><div class="payment-actions"><button id="saveQr" type="button">⬇️ Uložit QR kód</button><button id="copyPayment" type="button">📋 Kopírovat údaje</button></div></div><noscript><p class="message">Pro výběr částky a QR kód zapněte JavaScript. Příspěvek můžete poslat i ručně na níže uvedený účet.</p></noscript><dl class="bank-details"><dt>Příjemce</dt><dd>Jiří Janoušek</dd><dt>Účet</dt><dd>223366333/2010</dd><dt>IBAN</dt><dd>CZ82 2010 0000 0002 2336 6333</dd><dt>BIC/SWIFT</dt><dd>FIOBCZPPXXX</dd><dt>Zpráva pro příjemce</dt><dd>Podpora aplikace Moje krypto</dd></dl><p id="supportStatus" role="status" aria-live="polite"></p><p class="small">Odeslání platby potvrzujete ve svém bankovnictví. Tato stránka platbu neprovádí ani nepotvrzuje její přijetí.</p></section></div>
+
+</main>
+<footer class="site-common-footer"><div class="site-footer-top"><strong>Moje krypto · Jiří Janoušek</strong><a class="site-footer-support" href="/support.html">💛 Podpořte projekt Moje krypto</a></div><nav class="footer-legal" aria-label="Právní informace"><a href="/legal.php?view=terms">Podmínky používání</a><a href="/legal.php?view=legal">Právní upozornění</a><a href="/legal.php?view=privacy">Ochrana údajů / GDPR</a><a href="/legal.php?view=cookies">Cookies</a><button type="button" data-cookie-settings>Nastavení cookies</button><a href="https://jirijanousek.cz/" target="_blank" rel="noopener noreferrer">jirijanousek.cz ↗</a></nav><p>© 2026 Jiří Janoušek · Moje krypto</p></footer>
+</body></html>
