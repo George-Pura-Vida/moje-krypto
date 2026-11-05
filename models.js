@@ -40,7 +40,7 @@
      if(extra>0 && lastDip!==month && peak>0 && price<=peak*(1-threshold)){
        lastDip=month;dipUnits+=extra/price;dipSpent+=extra;dips++;
      }
-     const row=[time,regularUnits*price,dipUnits*price,regularSpent,dipSpent];
+     const row=[time,regularUnits*price,dipUnits*price,regularSpent,dipSpent,regularUnits?regularSpent/regularUnits:null,dipUnits?dipSpent/dipUnits:null,price];
      if(chart.length&&monthFor(chart[chart.length-1][0])===month)chart[chart.length-1]=row;
      else chart.push(row);
    }
