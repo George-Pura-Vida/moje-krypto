@@ -1,0 +1,28 @@
+name: Kontrola Moje krypto
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: PHP syntax
+        run: |
+          php -l index.php
+          php -l config.example.php
+      - name: JavaScript syntax
+        run: |
+          node --check charts.js
+          node --check models.js
+          node --check app.js
+      - name: Public repository has no private config
+        run: |
+          test ! -f config.local.php
+          test ! -f storage/data.php
+          test ! -f storage/admin.php
