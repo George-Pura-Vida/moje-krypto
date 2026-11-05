@@ -32,22 +32,16 @@
   refreshChart();
   setInterval(refreshPrices,120000);
  }
- async function persist(){
-  if(saving){pendingSave=true;return;}saving=true;
-  try{
-   const response=await fetch('?api=data',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':document.querySelector('meta[name=csrf-token]').content},body:JSON.stringify(data)});
-   const j=await response.json();if(!response.ok)throw Error(j.error||'Ukládání selhalo');
-  }catch(e){notify('⚠️ Data se nepodařilo uložit: '+e.message)}
-  finally{saving=false;if(pendingSave){pendingSave=false;persist();}}
- }
+ let saveQueue=Promise.resolve();
+ function persist(){const snapshot=JSON.stringify(data);const task=saveQueue.catch(()=>{}).then(async()=>{const response=await fetch('?api=data',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':document.querySelector('meta[name=csrf-token]').content},body:snapshot});const j=await response.json();if(!response.ok||!j.ok)throw Error(j.error||'Ukládání selhalo');});saveQueue=task;return task;}
  async function refreshPrices(){
   const status=$('online-status');status.className='online-status';status.textContent='● Načítání cen';
   try{
    const res=await fetch('?api=prices',{credentials:'same-origin',cache:'no-store'}),json=await res.json();
    if(!res.ok)throw Error(json.error||'Kurz není dostupný');
-   for(const key of ['BTC','ETH']){const p=json.data&&json.data[key];if(p&&Number(p.price)>0)prices[key]={price:Number(p.price),change24h:Number(p.change24h)||0};}
+   for(const key of ['BTC','ETH']){const p=json.data&&json.data[key];if(p&&Number(p.price)>0)prices[key]={price:Number(p.price),change24h:p.change24h==null?null:Number(p.change24h)};}
    pricesAt=json.updated_at;stalePrices=!!json.stale;
-   status.textContent=stalePrices?'● Poslední známý kurz':'● Online kurzy CZK';status.className='online-status '+(stalePrices?'bad':'ok');
+   status.textContent=(stalePrices?'● Uložený kurz':'● Online CZK')+' · '+(json.data.source||'trh')+' · '+new Date((pricesAt||Date.now()/1000)*1000).toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'});status.className='online-status '+(stalePrices?'bad':'ok');
   }catch(e){status.textContent='● Data nejsou dostupná';status.className='online-status bad';notify('⚠️ '+e.message);}
   renderDashboard();
  }
@@ -66,7 +60,7 @@
    const p=prices[sym],pre=sym.toLowerCase();
    $(pre+'-price').textContent=p?money(p.price):'—';
    const info=$(pre+'-change');info.textContent=p?'24 h: '+pct(p.change24h)+(stalePrices?' · archivní kurz':''):'Kurz zatím není dostupný';
-   info.className=p?(p.change24h>=0?'up':'down'):'';
+   info.className=p&&p.change24h!==null?(p.change24h>=0?'up':'down'):'';
   }
   const v=portfolio();
   $('portfolio-value').textContent=v.total===null?'—':money(v.total);
@@ -116,12 +110,13 @@
  function renderAll(fill=true){renderDashboard();renderTransactions();if(fill)renderSettings();}
  function navigate(to){
   page=to;
-  const names={dashboard:'Přehled kryptoměn',markets:'Trhy & historické grafy',transactions:'Moje transakce',strategies:'DCA & Buy the Dip',forecast:'Predikce & scénáře',settings:'Nastavení a data'};
+  const names={dashboard:'Přehled kryptoměn',markets:'Trhy & historické grafy',transactions:'Moje transakce',strategies:'DCA & Buy the Dip',forecast:'Predikce & scénáře',settings:'Nastavení a data',goals:'Cesta k mému cíli'};
   document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id==='page-'+to));
   document.querySelectorAll('.nav-link').forEach(x=>x.classList.toggle('active',x.dataset.page===to));
   $('page-title').textContent=names[to];closeMenu();window.scrollTo(0,0);
   if(to==='dashboard'||to==='markets')refreshChart();
   if(to==='forecast')runForecast();
+  if(to==='goals'){runGoal();runSatoshi();}
   if(to==='strategies'&&!$('dca-chart').dataset.done)runDca();
  }
  function closeMenu(){$('sidebar').classList.remove('open');$('mobile-shade').classList.remove('open');$('burger').setAttribute('aria-expanded','false')}
@@ -155,9 +150,17 @@
   $('set-112').addEventListener('click',()=>{$('f-mid').value=112;runForecast();notify('112 % p. a. je pouze ilustrativní scénář.')});
   ['f-initial','f-monthly','f-years','f-inflation','f-low','f-mid','f-high'].forEach(id=>$(id).addEventListener('change',runForecast));
   $('export-json').addEventListener('click',exportJson);
+  $('export-xlsx').addEventListener('click',exportExcel);
+  $('paste-import').addEventListener('click',()=>{$('paste-data').value='';$('paste-dialog').showModal()});
+  $('paste-cancel').addEventListener('click',()=>$('paste-dialog').close());
+  $('paste-confirm').addEventListener('click',importPaste);
+  $('calculate-goal').addEventListener('click',runGoal);
+  $('g-coin').addEventListener('change',()=>{$('g-target').value=$('g-coin').value==='BTC'?0.1:1;$('g-price').value='';runGoal()});
+  ['g-target','g-monthly','g-months','g-growth','g-price'].forEach(id=>$(id).addEventListener('change',runGoal));
+  ['sat-czk','sat-price'].forEach(id=>$(id).addEventListener('input',runSatoshi));
   $('export-csv').addEventListener('click',exportCsv);
   $('import-file').addEventListener('change',importFile);
-  $('print').addEventListener('click',()=>{navigate('dashboard');setTimeout(()=>window.print(),100)});
+  $('print').addEventListener('click',printReport);
   $('erase').addEventListener('click',async()=>{if(!confirm('Opravdu smazat všechny soukromé transakce a celé portfolio?'))return;data=fresh();await persist();renderAll();notify('Data byla vymazána.')});
  }
  async function getHistory(coin,range){
@@ -169,7 +172,7 @@
    const j=await response.json();if(!response.ok||!j.data||!Array.isArray(j.data.points))throw Error(j.error||'Historická data zatím nejsou k dispozici.');
    const points=j.data.points.map(p=>[Number(p[0]),Number(p[1])]).filter(p=>p[0]>0&&p[1]>0&&Number.isFinite(p[1])).sort((a,b)=>a[0]-b[0]);
    if(points.length<2)throw Error('Zvolený historický úsek je prázdný.');
-   const h={points,partial:!!j.data.coverage_partial,stale:!!j.stale,source:j.data.source||'CryptoCompare'};
+   const h={points,partial:!!j.data.coverage_partial,stale:!!j.stale,source:j.data.source||'Tržní zdroj',fxCurrent:!!j.data.fx_current};
    marketCache.set(key,h);return h;
   })();
   inflight.set(key,promise);try{return await promise}finally{inflight.delete(key)}
@@ -185,11 +188,11 @@
    if(page==='dashboard'){
     C.draw('home-chart',[{name:symbol+' CZK',color:color.market,points:history.points}],{title:'Cena '+symbol+' v CZK'});
     const p=history.points,a=p[0],b=p[p.length-1];
-    $('home-chart-footer').textContent=C.date(a[0])+' až '+C.date(b[0])+' · '+money(a[1])+' → '+money(b[1])+' · '+pct((b[1]/a[1]-1)*100)+(history.partial?' · ⚠️ Neúplné historické pokrytí':'')+(history.stale?' · poslední uložená data':'');
+    $('home-chart-footer').textContent=C.date(a[0])+' až '+C.date(b[0])+' · '+money(a[1])+' → '+money(b[1])+' · '+pct((b[1]/a[1]-1)*100)+' · '+history.source+(history.fxCurrent?' · ⚠️ Dnešní USD/CZK, nikoli historický korunový výnos.':'')+(history.partial?' · ⚠️ Neúplné historické pokrytí':'')+(history.stale?' · poslední uložená data':'');
    }else renderMarket(history);
   }catch(e){
    C.empty(el,'⚠️ '+e.message);
-   $(page==='dashboard'?'home-chart-footer':'market-chart-footer').textContent='Zdroj: CryptoCompare / CoinDesk Data. Data mohou být omezená nebo dočasně nedostupná.';
+   $(page==='dashboard'?'home-chart-footer':'market-chart-footer').textContent='Zdroje: CoinGecko / Kraken / Coinbase. Data jsou dočasně nedostupná; žádné náhradní ceny nevymýšlíme.';
   }
  }
  function renderMarket(history){
@@ -311,34 +314,33 @@
   download('\uFEFF'+columns.join(';')+'\r\n'+rows.join('\r\n'),'moje-krypto-prevody.csv','text/csv;charset=utf-8');
   notify('✅ CSV transakcí připraveno.');
  }
- function parseCsv(str){
-  const rows=[];let row=[],value='',inside=false;
-  str=str.replace(/^\uFEFF/,'');
-  for(let i=0;i<str.length;i++){
-   const ch=str[i];
-   if(ch==='"'){if(inside&&str[i+1]==='"'){value+='"';i++;}else inside=!inside;}
-   else if(ch===';'&&!inside){row.push(value);value='';}
-   else if((ch==='\r'||ch==='\n')&&!inside){if(ch==='\r'&&str[i+1]==='\n')i++;row.push(value);if(row.some(x=>x!==''))rows.push(row);row=[];value='';}
-   else value+=ch;
-  }
-  if(inside)throw Error('Chybné uvozovky v CSV.');
-  row.push(value);if(row.some(x=>x!==''))rows.push(row);
-  const heads=(rows.shift()||[]).map(h=>h.trim());
-  if(!['date','symbol','type','quantity','czk'].every(h=>heads.includes(h)))throw Error('CSV musí obsahovat date;symbol;type;quantity;czk.');
-  return rows.map(row=>Object.fromEntries(heads.map((h,i)=>[h,['quantity','czk'].includes(h)?String(row[i]||'').replace(',','.'):row[i]||''])));
+
+ function exportExcel(){try{download(window.KryptoData.xlsx(data),'moje-krypto.xlsx','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');notify('Excel připraven: portfolio a '+data.transactions.length+' transakcí.')}catch(e){notify('⚠️ '+e.message)}}
+ async function acceptImport(imported){
+  const next=validate(imported);if(!confirm('Načteno '+next.transactions.length+' transakcí. BTC '+fmt(next.assets.find(a=>a.symbol==='BTC').quantity,8)+' · ETH '+fmt(next.assets.find(a=>a.symbol==='ETH').quantity,10)+'. Nahradit současnou evidenci?'))return false;
+  if(data.transactions.length)exportJson();const before=data;data=next;
+  try{await persist();renderAll();notify('✅ Import uložen: '+data.transactions.length+' transakcí.');return true}catch(e){data=before;renderAll();throw Error('Import nebyl uložen: '+e.message)}
  }
- async function importFile(e){
-  const file=e.target.files?.[0];e.target.value='';if(!file)return;
-  try{
-   if(file.size>2400000)throw Error('Limit souboru je 2,4 MB.');
-   const text=await file.text();
-   let imported;
-   if(file.name.toLowerCase().endsWith('.json'))imported=validate(JSON.parse(text));
-   else if(file.name.toLowerCase().endsWith('.csv'))imported=validate({assets:data.assets,transactions:parseCsv(text)});
-   else throw Error('Podporované soubory jsou .json a .csv.');
-   if(!confirm('Import nahradí současnou evidenci. Máš její zálohu? Pokračovat?'))return;
-   data=imported;renderAll();await persist();notify('✅ Import hotový: '+data.transactions.length+' transakcí.');
-  }catch(err){notify('⚠️ '+err.message)}
+ async function importFile(e){const files=Array.from(e.target.files||[]);e.target.value='';if(!files.length)return;try{let imported=structuredClone(data);for(const file of files){if(file.size>2400000)throw Error('Limit souboru je 2,4 MB.');const ext=file.name.toLowerCase();if(ext.endsWith('.json'))imported=JSON.parse(await file.text());else if(ext.endsWith('.csv'))imported=window.KryptoData.rowsToData(window.KryptoData.csv(await file.text()),imported);else if(ext.endsWith('.xlsx'))imported=await window.KryptoData.readXlsx(await file.arrayBuffer(),imported);else throw Error('Použij .xlsx, .csv nebo .json.')}await acceptImport(imported)}catch(err){notify('⚠️ '+err.message)}}
+ async function importPaste(){try{const text=$('paste-data').value.trim();if(text.length>2400000)throw Error('Limit dat je 2,4 MB.');const imported=text.startsWith('{')?JSON.parse(text):window.KryptoData.rowsToData(window.KryptoData.csv(text),data);if(await acceptImport(imported))$('paste-dialog').close()}catch(e){notify('⚠️ '+e.message)}}
+ function runGoal(){
+  const coin=$('g-coin').value,price=n('g-price')||prices[coin]?.price,target=n('g-target'),monthly=n('g-monthly'),months=Math.max(1,Math.min(600,Math.round(n('g-months',24)))),growth=n('g-growth'),current=asset(coin).quantity;
+  if(!(price>0&&target>0&&monthly>=0&&growth>-100&&growth<=200)){$('goal-results').innerHTML=tile('Cena zatím není dostupná','Doplň cenu nebo počkej na kurz','Plán bez ceny nelze spočítat.');C.empty('goal-chart','Čekám na platnou cenu a parametry.');return}
+  const gap=Math.max(0,target-current),factor=Math.pow(1+growth/100,1/12),start=Date.now()/1000,points=[[start,current]],targetLine=[[start,target]];let quantity=current,discount=0,reach=current>=target?0:null;
+  for(let i=1;i<=600;i++){const p=price*Math.pow(factor,i);quantity+=monthly/p;if(i<=months){discount+=1/p;points.push([start+i*30.4375*86400,quantity]);targetLine.push([start+i*30.4375*86400,target])}if(reach===null&&quantity>=target)reach=i;}
+  const need=discount>0?gap/discount:0,progress=Math.min(100,current/target*100);$('goal-progress').value=progress;
+  $('goal-results').innerHTML=tile('Mám / cíl',fmt(current,8)+' / '+fmt(target,8)+' '+coin,progress.toFixed(1)+' % splněno')+tile('Zbývá dokoupit',fmt(gap,8)+' '+coin,'Při dnešní ceně '+money(gap*price))+tile('Měsíčně pro zvolený termín',money(need),months+' měsíců při modelové změně ceny '+pct(growth))+tile('Dosažení při tvém rozpočtu',reach===0?'Cíl splněn':reach===null?'Více než 50 let':reach+' měsíců',money(monthly)+' měsíčně · změna ceny '+pct(growth));
+  C.draw('goal-chart',[{name:'Modelované množství '+coin,color:color.market,points},{name:'Můj cíl '+coin,color:color.custom,points:targetLine,dashed:true}],{title:'Cesta k cíli v '+coin,unit:coin});
+  $('goal-foot').textContent=($('g-price').value?'Vlastní zadaná cena: ':'Poslední načtená tržní cena: ')+money(price)+' / '+coin+'. Nákupy na konci měsíce; plán není automatická objednávka. Při vyšší ceně se cíl v mincích dosahuje pomaleji.';
  }
+ function runSatoshi(){const price=n('sat-price')||prices.BTC?.price,amount=n('sat-czk');$('sat-result').innerHTML=price>0&&amount>=0?tile('Za '+money(amount),fmt(Math.floor(amount/price*1e8),0)+' satoshi',fmt(amount/price,8)+' BTC při '+money(price)+' / BTC'):tile('Čekám na cenu BTC','—','Zadej vlastní kurz, pokud tržní data nejsou dostupná.')}
+ function printReport(){
+  const p=portfolio(),stamp=new Date().toLocaleString('cs-CZ');let html='<h1>Moje krypto · soukromý report</h1><p>Vytvořeno '+safe(stamp)+'</p><h2>Portfolio</h2><table><thead><tr><th>Aktivum</th><th>Množství</th><th>Tržní hodnota</th><th>Nákupní náklady</th></tr></thead><tbody>';
+  html+=p.rows.map(r=>'<tr><td>'+r.sym+'</td><td>'+fmt(r.amount,10)+'</td><td>'+money(r.value)+'</td><td>'+money(r.cost)+'</td></tr>').join('')+'</tbody></table><p>Hodnota portfolia '+money(p.total)+'. '+safe($('online-status').textContent)+'</p><h2>Transakce</h2><table><thead><tr><th>Datum</th><th>Typ</th><th>Aktivum</th><th>Množství</th><th>Kč při převodu</th><th>Poznámka</th></tr></thead><tbody>';
+  html+=ordered().map(t=>'<tr><td>'+safe(t.date)+'</td><td>'+safe(types[t.type])+'</td><td>'+t.symbol+'</td><td>'+fmt(t.quantity,10)+'</td><td>'+money(t.czk)+'</td><td>'+safe(t.note)+'</td></tr>').join('')+'</tbody></table><p>Hodnoty převodů nejsou pořizovací náklady. Neznámé náklady zůstávají nevyplněné. Report není daňovým výpočtem.</p>';
+  if($('goal-results').textContent)html+='<h2>Cesta k cíli · model</h2>'+$('goal-results').innerHTML+'<p>'+safe($('goal-foot').textContent)+'</p>';
+  $('print-report').innerHTML=html;window.print();
+ }
+
  init();
 })();

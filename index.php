@@ -98,6 +98,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'&&isset($_POST['form_action'])){
   $_SESSION=[];session_regenerate_id(true);header('Location: ./');exit;
  }
 }
+require_once __DIR__.'/market-data.php';
 if($api!==''){
  if(!$logged)reply(['error'=>'Přihlas se prosím.'],401);
  if($api==='data'){
@@ -107,60 +108,28 @@ if($api!==''){
    if(!is_string($raw)||strlen($raw)>2500000)reply(['error'=>'Data přesahují limit 2,5 MB.'],413);
    $j=json_decode($raw,true);
    if(!is_array($j)||!isset($j['assets'],$j['transactions'])||!is_array($j['assets'])||!is_array($j['transactions'])||count($j['assets'])>40||count($j['transactions'])>10000)reply(['error'=>'Neplatný formát dat.'],422);
-   foreach($j['assets'] as $x)if(!is_array($x)||!isset($x['symbol'],$x['quantity'],$x['costBasis']))reply(['error'=>'Neplatná položka portfolia.'],422);
+   foreach($j['assets'] as $x)if(!is_array($x)||!isset($x['symbol'],$x['quantity'])||!array_key_exists('costBasis',$x)||!in_array($x['symbol'],['BTC','ETH'],true)||!is_numeric($x['quantity'])||(float)$x['quantity']<0||($x['costBasis']!==null&&(!is_numeric($x['costBasis'])||(float)$x['costBasis']<0)))reply(['error'=>'Neplatná položka portfolia.'],422);
    foreach($j['transactions'] as $x)if(!is_array($x)||!isset($x['date'],$x['symbol'],$x['type'],$x['quantity'],$x['czk']))reply(['error'=>'Neplatná transakce.'],422);
    if(!writeStore($dataFile,['assets'=>$j['assets'],'transactions'=>$j['transactions']]))reply(['error'=>'Úložiště není zapisovatelné.'],500);
    reply(['ok'=>true]);
   }
  }
  if($api==='prices'){
-  $ret=cached('prices',90,static function(){
-   $j=fetchJson('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH&tsyms=CZK');
-   if(!isset($j['RAW']['BTC']['CZK']['PRICE'],$j['RAW']['ETH']['CZK']['PRICE']))return null;
-   $out=[];
-   foreach(['BTC','ETH'] as $c){$x=$j['RAW'][$c]['CZK'];$out[$c]=['price'=>(float)$x['PRICE'],'change24h'=>(float)($x['CHANGEPCT24HOUR']??0),'high24h'=>(float)($x['HIGHDAY']??0),'low24h'=>(float)($x['LOWDAY']??0)];}
-   return $out;
-  });reply($ret,isset($ret['error'])?503:200);
+  $ret=cached('prices-v2',90,'marketPrices');reply($ret,isset($ret['error'])?503:200);
  }
  if($api==='history'){
   $coin=(string)($_GET['coin']??'BTC');$period=(string)($_GET['period']??'1Y');
   if(!in_array($coin,['BTC','ETH'],true)||!in_array($period,['1D','7D','1M','3M','6M','1Y','5Y','15Y'],true))reply(['error'=>'Nepodporovaný graf.'],400);
-  $needed=['1D'=>1,'7D'=>7,'1M'=>30,'3M'=>90,'6M'=>180,'1Y'=>365,'5Y'=>1826,'15Y'=>5479][$period];
-  $hourly=$period==='1D'||$period==='7D';
-  $ttl=$period==='1D'?300:($period==='7D'?600:($period==='15Y'?43200:1800));
-  $res=cached(strtolower("history-$coin-$period"),$ttl,static function()use($coin,$period,$needed,$hourly){
-   $chunkSize=2000;$target=$hourly?$needed*24:$needed;
-   $count=(int)ceil($target/$chunkSize);$toTs=time();$all=[];
-   for($i=0;$i<$count;$i++){
-    $limit=min($chunkSize,$target-$i*$chunkSize);
-    $kind=$hourly?'histohour':'histoday';
-    $url='https://min-api.cryptocompare.com/data/v2/'.$kind.'?fsym='.$coin.'&tsym=CZK&limit='.$limit.'&toTs='.$toTs;
-    $j=fetchJson($url);
-    if(($j['Response']??'Success')!=='Success'||!is_array($j['Data']['Data']??null))break;
-    $points=[];
-    foreach($j['Data']['Data'] as $p){
-     if(isset($p['time'],$p['close'])&&is_numeric($p['close'])&&(float)$p['close']>0)$points[]=[(int)$p['time'],(float)$p['close']];
-    }
-    if(!$points)break;
-    $all=array_merge($points,$all);
-    $first=min(array_column($j['Data']['Data'],'time'));if($first<=0)break;
-    $toTs=(int)$first-($hourly?3600:86400);
-    if(count($j['Data']['Data'])<$limit)break;
-   }
-   if(count($all)<2)return null;
-   $uniq=[];foreach($all as $p)$uniq[(string)$p[0]]=$p;
-   ksort($uniq,SORT_NUMERIC);
-   return ['points'=>array_values($uniq),'symbol'=>$coin,'period'=>$period,'source'=>'CryptoCompare / CoinDesk Data','coverage_partial'=>count($uniq)<($target*0.95)];
-  });reply($res,isset($res['error'])?503:200);
+  $res=cached(strtolower('history-v2-'.$coin.'-'.$period),$period==='1D'?300:1800,static fn()=>marketHistory($coin,$period));reply($res,isset($res['error'])?503:200);
  }
  reply(['error'=>'Neznámá akce.'],404);
 }
 ?>
 <!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#12191e"><meta name="csrf-token" content="<?=htmlspecialchars((string)($_SESSION['csrf']??''),ENT_QUOTES)?>">
+<meta name="theme-color" content="#102c58"><meta name="csrf-token" content="<?=htmlspecialchars((string)($_SESSION['csrf']??''),ENT_QUOTES)?>">
 <meta name="description" content="Moje krypto – soukromá evidence BTC a ETH, online kurzy v CZK, analýza, DCA a simulace.">
-<title>Moje krypto | Jiří Janoušek</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css">
-<?php if($logged):?><script src="charts.js" defer></script><script src="models.js" defer></script><script src="app.js" defer></script><?php endif;?>
+<title>Moje krypto | Jiří Janoušek</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css?v=20261105b">
+<?php if($logged):?><script src="charts.js?v=20261105b" defer></script><script src="models.js" defer></script><script src="data-tools.js?v=20261105b" defer></script><script src="app.js?v=20261105b" defer></script><?php endif;?>
 </head><body>
 <?php if(!$logged):?>
 <div class="auth-scene"><div class="auth-card"><div class="mark">₿</div>
@@ -182,13 +151,14 @@ if($api!==''){
 <div class="app-layout"><div id="mobile-shade"></div><aside id="sidebar" class="sidebar">
 <div class="brand"><div class="brand-icon">₿</div><div><b>Moje krypto</b><small>investiční centrum</small></div></div>
 <div class="nav-label">MOJE ANALYTIKA</div><nav id="navigation" aria-label="Navigace">
-<button class="nav-link active" data-page="dashboard">📊 <span>Přehled</span></button>
-<button class="nav-link" data-page="markets">📈 <span>Trhy & grafy</span></button>
-<button class="nav-link" data-page="transactions">💸 <span>Transakce</span></button>
-<button class="nav-link" data-page="strategies">🔁 <span>DCA & Buy the Dip</span></button>
-<button class="nav-link" data-page="forecast">🔮 <span>Predikce & scénáře</span></button>
-<button class="nav-link" data-page="settings">⚙️ <span>Nastavení & data</span></button>
-</nav><div class="sidebar-bottom"><p>🔐 Soukromá evidence. Kurzy dodává CryptoCompare / CoinDesk Data.</p><a href="https://jirijanousek.cz/" target="_blank" rel="noopener noreferrer">jirijanousek.cz ↗</a></div>
+<button class="nav-link active" data-page="dashboard"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z"/></svg> <span>Přehled</span></button>
+<button class="nav-link" data-page="markets"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18 M4 15l5-6 4 3 7-9"/></svg> <span>Trhy & grafy</span></button>
+<button class="nav-link" data-page="transactions"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h15m-4-4 4 4-4 4 M20 17H5m4-4-4 4 4 4"/></svg> <span>Transakce</span></button>
+<button class="nav-link" data-page="strategies"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h13l-3-3 M20 17H7l3 3 M20 7v5 M4 17v-5"/></svg> <span>DCA & Buy the Dip</span></button>
+<button class="nav-link" data-page="forecast"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V9m8 11V4m8 16v-8 M2 21h20"/></svg> <span>Predikce & scénáře</span></button>
+<button class="nav-link" data-page="goals"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 M12 7a5 5 0 1 0 5 5 M12 12l9-9 M16 3h5v5"/></svg> <span>Cesta k cíli</span></button>
+<button class="nav-link" data-page="settings"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16 M4 12h16 M4 18h16 M8 3v6 M16 9v6 M9 15v6"/></svg> <span>Nastavení & data</span></button>
+</nav><div class="sidebar-bottom"><p>🔐 Soukromá evidence. Kurzy: CoinGecko / Coinbase; grafy také Kraken.</p><a href="https://jirijanousek.cz/" target="_blank" rel="noopener noreferrer">jirijanousek.cz ↗</a></div>
 </aside>
 <div class="workspace">
 <header class="header"><div class="header-left"><button class="burger" id="burger" aria-label="Otevřít menu" aria-expanded="false">☰</button><div><div class="eyebrow">JIŘÍ JANOUŠEK / INVESTICE</div><h1 id="page-title">Přehled kryptoměn</h1></div></div>
@@ -245,6 +215,12 @@ if($api!==''){
 <div class="note">Výpočty používají konstantní modelové roční zhodnocení, měsíční složené úročení a vklady na konci měsíce. Inflace snižuje kupní sílu nominální částky. Nezohledňují volatilitu, daně ani poplatky.</div>
 </article><article class="panel"><h2>📊 Srovnání scénářů</h2><div id="forecast-summary" class="result-grid"></div><div id="forecast-chart" class="graph compact"></div><div id="forecast-table"></div></article></div>
 </section>
+<section id="page-goals" class="page">
+<article class="panel goal-hero"><div class="eyebrow">MŮJ DALŠÍ MILNÍK</div><h2>🎯 Cesta k 0,1 BTC nebo 1 ETH</h2><p>Vlastní cíl, pravidelné vklady a přehledný plán. Vychází z tvého uloženého portfolia.</p>
+<div class="form-columns"><label>Aktivum<select id="g-coin"><option>BTC</option><option>ETH</option></select></label><label>Cílové množství<input id="g-target" type="number" min="0.00000001" step="any" value="0.1"></label><label>Měsíční rozpočet (Kč)<input id="g-monthly" type="number" min="0" step="100" value="3000"></label><label>Za kolik měsíců chci cíl splnit<input id="g-months" type="number" min="1" max="600" value="24"></label><label>Modelový růst ceny (% ročně)<input id="g-growth" type="number" min="-90" max="200" step="1" value="0"></label><label>Vlastní cena 1 mince v Kč (volitelné)<input id="g-price" type="number" min="0" step="any" placeholder="Automaticky aktuální kurz"></label></div>
+<button class="btn gold" id="calculate-goal">Spočítat můj plán</button><div id="goal-results" class="result-grid"></div><progress id="goal-progress" max="100" value="0" aria-label="Dosavadní splnění cíle"></progress><div id="goal-chart" class="graph tall"></div><p id="goal-foot"></p></article>
+<article class="panel bottom-panel"><h2>₿ Kalkulačka satoshi</h2><p>1 BTC = 100 000 000 satoshi. Přepočet podle aktuálního kurzu, případně vlastní zadané ceny BTC.</p><div class="form-columns"><label>Částka v Kč<input id="sat-czk" type="number" min="0" value="1000"></label><label>Vlastní kurz BTC v Kč (volitelné)<input id="sat-price" type="number" min="0" placeholder="Aktuální cena BTC"></label></div><div id="sat-result" class="result-grid"></div></article>
+<div class="note">Plán je model, nikoli pokyn k obchodování. Pravidelné vklady rozloží nákupy v čase. Při růstu ceny získáš za stejný vklad méně mincí, při poklesu více. Model nezahrnuje poplatky, spread ani daně; nákupy při poklesu vyžadují samostatnou rezervu.</div></section>
 <section id="page-settings" class="page">
 <div class="two-cols"><article class="panel"><h2>💼 Stav portfolia</h2><p>Zadej aktuální množství BTC/ETH a pořizovací náklady aktuálně držených jednotek. Cena trhu se doplňuje automaticky online.</p>
 <div class="form-columns"><label>🟠 BTC (množství)<input type="number" id="qty-btc" step="0.00000001" min="0"></label><label>💠 ETH (množství)<input type="number" id="qty-eth" step="0.00000001" min="0"></label>
@@ -252,9 +228,9 @@ if($api!==''){
 <button class="btn gold" id="save-portfolio">💾 Uložit portfolio</button><div class="note">Přijatá hodnota BTC do Trezoru není automaticky tvá nákupní cena. Pokud pořizovací náklady neznáš, pole nech prázdné a výsledek správně zobrazíme jako neznámý.</div>
 </article>
 <article class="panel"><h2>📁 Import / export / tisk</h2><p>Bez připojení k privátním klíčům. Importuj výpis transakcí, zálohuj údaje a vytiskni report.</p>
-<div class="button-stack"><label class="btn gold file-btn">⬆ Import JSON nebo CSV<input id="import-file" type="file" accept=".json,.csv" hidden></label><button class="btn" id="export-json">⬇ Export všeho do JSON</button><button class="btn" id="export-csv">⬇ Export převodů do CSV</button><button class="btn" id="print">🖨 Tisk / PDF</button><button class="btn danger" id="erase">🗑 Smazat evidenci</button></div><div class="note">Import JSON nahrazuje aktuální evidenci. Předem si ji zálohuj. Import CSV předpokládá strukturu exportu z této aplikace.</div>
+<div class="button-stack"><label class="btn gold file-btn">⬆ Import Excel / Trezor CSV / JSON<input id="import-file" type="file" accept=".xlsx,.json,.csv" multiple hidden></label><button class="btn" id="paste-import">📋 Vložit data JSON / CSV</button><button class="btn" id="export-xlsx">⬇ Export do Excelu (.xlsx)</button><button class="btn" id="export-json">⬇ Export všeho do JSON</button><button class="btn" id="export-csv">⬇ Export převodů do CSV</button><button class="btn" id="print">⬇ Export PDF / tisk</button><button class="btn danger" id="erase">🗑 Smazat evidenci</button></div><div class="note">Excel (.xlsx) z této aplikace obsahuje portfolio i transakce. Trezor CSV lze vybrat pro BTC a ETH současně; duplicitní ID se přeskočí a odchozí množství zahrnuje poplatek. Import JSON / Excel nahradí evidenci po potvrzení. Staré .xls nejprve ulož jako .xlsx. PDF otevře tiskový náhled pro uložení do PDF.</div>
 </article></div>
-<div class="panel bottom-panel"><h2>ℹ️ O datech a predikcích</h2><p>Tržní zdroj: <a href="https://www.cryptocompare.com/" target="_blank" rel="noopener noreferrer">CryptoCompare / CoinDesk Data</a>. Historické ceny v CZK jsou poskytované externí službou s její dostupností a limity. Staré úseky, zvláště před vznikem ETH, nejsou automaticky vyplňovány smyšlenými hodnotami. Údaje se mohou lišit od kurzu tvé burzy. Tato aplikace neposkytuje investiční doporučení.</p><p>🛡️ Registrace je vypnutá. Přihlášení je možné pouze přes vytvořený administrátorský účet. Heslo není možné měnit z aplikace; správa probíhá na serveru.</p></div>
+<div class="panel bottom-panel"><h2>ℹ️ O datech a predikcích</h2><p>Tržní zdroje: CoinGecko, Coinbase, Kraken; dříve <a href="https://www.cryptocompare.com/" target="_blank" rel="noopener noreferrer">CryptoCompare / CoinDesk Data</a>. Historie z CoinGecko je v CZK. Záložní historie Kraken je v USD přepočtených dnešním USD/CZK, nikoli historickým kurzem. Datum, zdroj a neúplné pokrytí jsou uvedené u grafu. Staré úseky, zvláště před vznikem ETH, nejsou automaticky vyplňovány smyšlenými hodnotami. Údaje se mohou lišit od kurzu tvé burzy. Tato aplikace neposkytuje investiční doporučení.</p><p>🛡️ Registrace je vypnutá. Přihlášení je možné pouze přes vytvořený administrátorský účet. Heslo není možné měnit z aplikace; správa probíhá na serveru.</p></div>
 </section>
 </main><footer>© 2026 Jiří Janoušek · Moje krypto · <a href="https://jirijanousek.cz/" target="_blank" rel="noopener noreferrer">jirijanousek.cz ↗</a><span>Historické výsledky nejsou zárukou budoucích výnosů.</span></footer>
 </div></div>
@@ -264,6 +240,7 @@ if($api!==''){
 <label>Množství v kryptoměně<input id="tx-qty" type="number" min="0" step="0.00000001" required></label>
 <label>Částka v Kč při transakci<input type="number" id="tx-czk" min="0" step="0.01" required></label><label>Poznámka<input type="text" id="tx-note" maxlength="160" placeholder="Volitelné"></label></div>
 <div class="modal-buttons"><button class="btn" type="button" id="cancel-modal">Zrušit</button><button class="btn gold" type="submit">💾 Uložit transakci</button></div></form></dialog>
+<dialog id="paste-dialog"><h2>Vložit soukromá data</h2><p>Vlož JSON zálohu nebo obsah CSV. Údaje se uloží pouze do tvé aplikace.</p><textarea id="paste-data" rows="12" aria-label="Data JSON nebo CSV" spellcheck="false"></textarea><div class="modal-buttons"><button class="btn" id="paste-cancel">Zrušit</button><button class="btn gold" id="paste-confirm">Zkontrolovat a importovat</button></div></dialog><section id="print-report"></section>
 <div id="toast" aria-live="polite" role="status"></div>
 <?php endif; ?>
 </body></html>

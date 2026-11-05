@@ -13,11 +13,13 @@
   const box=document.getElementById(id);if(!box)return;
   const lines=series.filter(s=>Array.isArray(s.points)&&s.points.length>=2);
   if(!lines.length){empty(id,'Pro toto období nejsou dostupná data.');return;}
-  const W=900,H=opt.tall?360:250,L=69,R=W-20,T=18,B=H-43;
+  const W=Math.max(340,Math.min(1100,box.clientWidth||900)),H=opt.tall?360:250,L=76,R=W-18,T=24,B=H-43;
   const values=lines.flatMap(s=>s.points.map(p=>Number(p[1]))).filter(Number.isFinite);
   if(!values.length){empty(id,'Nejsou dostupné hodnoty.');return;}
   const minX=Math.min(...lines.map(l=>l.points[0][0]));
   const maxX=Math.max(...lines.map(l=>l.points[l.points.length-1][0]));
+  const tickDate=t=>maxX-minX<3*86400?new Date(t*1000).toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'}):date(t);
+  const valueLabel=v=>opt.percent?f(v,1)+' %':opt.unit?f(v,8)+' '+opt.unit:short(v)+' Kč';
   let minY=Math.min(...values),maxY=Math.max(...values);
   const margin=(maxY-minY)*0.1||Math.max(1,Math.abs(maxY)*0.1);minY-=margin;maxY+=margin;
   if(opt.zero)minY=Math.min(0,minY);
@@ -26,18 +28,20 @@
   let grid='',ticks='';
   for(let i=0;i<5;i++){
    const yy=T+(B-T)*i/4, v=maxY-(maxY-minY)*i/4;
-   grid+='<line class="grid-line" x1="'+L+'" y1="'+yy+'" x2="'+R+'" y2="'+yy+'"/><text class="axis-label" x="'+(L-8)+'" y="'+(yy+4)+'" text-anchor="end">'+esc(opt.percent?f(v,0)+' %':short(v))+'</text>';
+   grid+='<line class="grid-line" x1="'+L+'" y1="'+yy+'" x2="'+R+'" y2="'+yy+'"/><text class="axis-label" x="'+(L-8)+'" y="'+(yy+4)+'" text-anchor="end">'+esc(opt.unit?f(v,4):opt.percent?f(v,0)+' %':short(v))+'</text>';
    const xx=L+(R-L)*i/4, tt=minX+(maxX-minX)*i/4;
-   ticks+='<text class="axis-label" x="'+xx+'" y="'+(B+26)+'" text-anchor="middle">'+esc(date(tt))+'</text>';
+   if(W>600||i%2===0)ticks+='<text class="axis-label" x="'+xx+'" y="'+(B+26)+'" text-anchor="'+(i===0?'start':i===4?'end':'middle')+'">'+esc(tickDate(tt))+'</text>';
   }
   let paths='';
   lines.forEach((s,i)=>{
    const arr=s.points.length>1100?Array.from({length:1100},(_,j)=>s.points[Math.floor(j*(s.points.length-1)/1099)]):s.points;
    const d=arr.map((p,k)=>(k?'L':'M')+x(p[0]).toFixed(2)+','+y(p[1]).toFixed(2)).join(' ');
+   if(i===0&&!opt.percent)paths+='<path fill="url(#'+id+'-fill)" d="'+d+' L'+x(arr[arr.length-1][0]).toFixed(2)+','+B+' L'+x(arr[0][0]).toFixed(2)+','+B+' Z"/>';
    paths+='<path class="chart-line" stroke="'+esc(s.color||'#ffbe67')+'" d="'+d+'" '+(s.dashed?'stroke-dasharray="6 5"':'')+'></path>';
+   const last=arr[arr.length-1];paths+='<circle cx="'+x(last[0])+'" cy="'+y(last[1])+'" r="3.5" fill="'+esc(s.color||'#ffbe67')+'"/>';
   });
   const tooltipHeight=32+lines.length*19;
-  box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="'+esc(opt.title||'Čárový graf')+'">'+grid+ticks+paths+'<g class="chart-hover" style="display:none"><line class="hover-marker" x1="0" y1="'+T+'" x2="0" y2="'+B+'"/><rect class="chart-tooltip" x="0" y="0" width="206" height="'+tooltipHeight+'" rx="9"/><text class="hover-label" fill="#f5eddc" font-size="12"></text></g><rect class="chart-hit" x="'+L+'" y="'+T+'" width="'+(R-L)+'" height="'+(B-T)+'" fill="transparent" /></svg>';
+  box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="'+esc(opt.title||'Čárový graf')+'"><defs><linearGradient id="'+id+'-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+esc(lines[0].color||'#7eb4f2')+'" stop-opacity=".28"/><stop offset="100%" stop-color="'+esc(lines[0].color||'#7eb4f2')+'" stop-opacity="0"/></linearGradient></defs>'+grid+ticks+paths+'<g class="chart-hover" style="display:none"><line class="hover-marker" x1="0" y1="'+T+'" x2="0" y2="'+B+'"/><rect class="chart-tooltip" x="0" y="0" width="250" height="'+tooltipHeight+'" rx="9"/><text class="hover-label" fill="#f5eddc" font-size="11"></text></g><rect class="chart-hit" x="'+L+'" y="'+T+'" width="'+(R-L)+'" height="'+(B-T)+'" fill="transparent" /></svg>';
   const svg=box.querySelector('svg'),zone=svg.querySelector('.chart-hit'),tooltip=svg.querySelector('.chart-hover');
   function nearest(arr,time){
    let left=0,right=arr.length-1;
@@ -48,13 +52,13 @@
    const bounds=svg.getBoundingClientRect();
    const xx=clamp((event.clientX-bounds.left)/bounds.width*W,L,R);
    const at=minX+(xx-L)/(R-L)*(maxX-minX);
-   const xxLabel=clamp(xx,110,R-110);
+   const xxLabel=clamp(xx,128,W-128);
    tooltip.style.display='';
    const line=tooltip.querySelector('line');line.setAttribute('x1',xx);line.setAttribute('x2',xx);
-   const rect=tooltip.querySelector('rect');rect.setAttribute('x',xxLabel-103);rect.setAttribute('y',T+4);
-   const label=tooltip.querySelector('text');label.setAttribute('x',xxLabel-95);label.setAttribute('y',T+5);
-   let txt='<tspan x="'+(xxLabel-95)+'" dy="15">'+esc(date(at))+'</tspan>';
-   for(const l of lines){const v=nearest(l.points,at)[1];txt+='<tspan x="'+(xxLabel-95)+'" dy="18" fill="'+esc(l.color||'#ffbe67')+'">'+esc(l.name)+': '+esc(opt.percent?f(v,1)+' %':short(v))+'</tspan>';}
+   const rect=tooltip.querySelector('rect');rect.setAttribute('x',xxLabel-125);rect.setAttribute('y',T+4);
+   const label=tooltip.querySelector('text');label.setAttribute('x',xxLabel-116);label.setAttribute('y',T+5);
+   let txt='<tspan x="'+(xxLabel-116)+'" dy="15">'+esc(date(at))+'</tspan>';
+   for(const l of lines){const v=nearest(l.points,at)[1];txt+='<tspan x="'+(xxLabel-116)+'" dy="18" fill="'+esc(l.color||'#ffbe67')+'">'+esc(l.name)+': '+esc(valueLabel(v))+'</tspan>';}
    label.innerHTML=txt;
   });
   zone.addEventListener('pointerleave',()=>{tooltip.style.display='none'});
