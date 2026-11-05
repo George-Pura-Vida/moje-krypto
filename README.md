@@ -1,24 +1,23 @@
-# ₿ Moje krypto – Bitcoin a Ethereum
+# Moje Krypto — profesionální sjednocená verze
+Základem je aktuální analytická aplikace z větve main (BTC a ETH, online kurzy, časové grafy, DCA, Buy the Dip, inflace, PDF/Excel/CSV a importní nástroje). Přidává registraci a e-mailové šablony podle Moje renta, správu uživatelů a soukromou evidenci pro každý účet.
 
-Osobní webová aplikace Jiřího Janouška pro BTC/ETH. PHP 8.1+ na Webkitty, vlastní administrátorské přihlášení (bez registrace), tmavý/zlatý responzivní design.
+## Co se zachovalo
+- Online BTC/ETH v CZK a historické grafy (podle dostupnosti poskytovatele)
+- Grafy, výpočty, modely, exporty a importní dialogy z aktuálního main
+- Moderní tmavý/zlatý design a responzivní rozhraní
+- Serverové PHP rozhraní a datové validace
 
-### Funkce
-- 📊 Dashboard: online kurzy BTC/ETH v CZK, změna za 24 hodin, hodnoty držených aktiv, donut graf a roční příjmy.
-- 📈 Interaktivní historické grafy 1D, 7D, 1M, 3M, 6M, 1Y, 5Y, 15Y; dostupnost 15leté historie závisí na datovém zdroji.
-- 💹 Kumulativní výnosy, CAGR, vlastní scénář zhodnocení, inflace a kupní síla.
-- 🔁 Historická simulace DCA a Buy the Dip s nastavitelnými vklady, nákupním prahem a průměrnou cenou.
-- 🔮 Budoucí modely investic s měnitelnou inflací a ročním výnosem (včetně ilustrativních 112 %).
-- 💸 Evidence převodů, úpravy, filtry, export CSV a soukromá JSON záloha i import.
-- 🔒 Jediný administrátor, heslo hashované na serveru, session cookies a CSRF ochrana. Bez externích fontů a bez publikovaných osobních dat.
+## Nový přístup
+- Účet, registrace, potvrzení e-mailu do 24 hodin, obnovení hesla do 30 minut
+- Administrátor: jgjanousek@gmail.com; heslo není uloženo v GitHubu a nelze je převzít z jiného webu
+- Procesní e-maily a oznámení podle Moje renta, odesílání vyžaduje funkční PHP mail() a DNS SPF/DKIM
+- Data oddělena podle ID uživatele v soukromém adresáři mimo document root
+- Starý soubor storage/data.php se při prvním přihlášení administrátora zkopíruje do jeho soukromého úložiště; originál zůstane nedotčen
+- Pozor: verze zdrojového účtového systému aktivuje běžné účty po ověření e-mailu automaticky. Správce může účty následně zablokovat.
+- Server potřebuje PHP 8.1+, PDO SQLite, HTTPS a možnost zápisu do soukromého adresáře.
 
-### Nasazení na Webkitty
-**Vložení do GitHubu samo o sobě nenasazuje web na doménu.** Postup krok za krokem je v [DEPLOYMENT.md](DEPLOYMENT.md). Web je určen pro `https://moje-krypto.jirijanousek.cz/`.
+## Nasazení
+GitHub commit neznamená nasazení na Webkitty. Přeneste všechny soubory z main včetně podsložky auth a aktualizovaného index.php na hosting; předem zálohujte data a konfiguraci. Testujte registraci, reset hesla, e-mailové doručení, import/export a dva oddělené účty. Nezveřejňujte hesla, přístupové tokeny ani soukromé klíče.
 
-### Kurzy a výnosy
-Tržní data jsou čerpána z CryptoCompare / CoinDesk Data. Starší historie a aktuální data mohou být dočasně omezená, proto aplikace při selhání zdroje nevymýšlí hodnoty. Převod do Trezoru není důkazem nákupu za zobrazenou cenu. Skutečný zisk se počítá až po zadání nákupních nákladů aktuálně drženého portfolia. Predikce jsou výhradně **scénáře**, nikoli investiční doporučení či garance.
-
-### Soukromí
-Repozitář je veřejný. **Do repozitáře nepatří hesla, instalační klíče, transakce ani privátní klíče peněženek.** Osobní importní soubor se nahrává až do zabezpečené aplikace. Nikdy nezadávej seed nebo recovery phrase.
-
-### Automatická kontrola
-GitHub Actions provádí PHP a JavaScript syntaktickou kontrolu při aktualizaci větve main.
+## Rizika
+Při prvním přechodu je nutné založit účet správce v novém systému; stávající hash administrátora v původním storage/admin.php se automaticky nepřenáší. Pro administrátora je doporučeno před nasazením připravit bezpečný postup aktivace a zálohu. Investiční modely nejsou garancí výnosů.
