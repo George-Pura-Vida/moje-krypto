@@ -1,0 +1,9 @@
+config.local.php
+storage/*
+!storage/.htaccess
+*.log
+.DS_Store
+.env
+.env.*
+!config.example.php
+node_modules/
