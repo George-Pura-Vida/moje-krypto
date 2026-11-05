@@ -101,7 +101,7 @@ if($api!==''){
 <meta name="description" content="Moje krypto – soukromá evidence BTC a ETH, online kurzy v CZK, analýza, DCA a simulace.">
 <title>Moje krypto | Jiří Janoušek</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css?v=20261105f">
 <?php if($logged):?><script src="charts.js?v=20261105d" defer></script><script src="models.js" defer></script><script src="data-tools.js?v=20261105e" defer></script><script src="cost-utils.js?v=20261105e" defer></script><script src="app.js?v=20261105e" defer></script><?php endif;?>
-</head><body>
+<link rel="stylesheet" href="/privacy.css?v=2"><script type="module" src="/privacy.js?v=2"></script></head><body>
 <?php if($logged):?>
 <div class="app-layout"><div id="mobile-shade"></div><aside id="sidebar" class="sidebar">
 <div class="brand"><div class="brand-icon">₿</div><div><b>Moje krypto</b><small>investiční centrum</small></div></div>
@@ -187,7 +187,7 @@ if($api!==''){
 </article></div>
 <div class="panel bottom-panel"><h2>ℹ️ O datech a predikcích</h2><p>Tržní zdroje: CoinGecko, Coinbase, Kraken; dříve <a href="https://www.cryptocompare.com/" target="_blank" rel="noopener noreferrer">CryptoCompare / CoinDesk Data</a>. Historie z CoinGecko je v CZK. Záložní historie Kraken je v USD přepočtených dnešním USD/CZK, nikoli historickým kurzem. Datum, zdroj a neúplné pokrytí jsou uvedené u grafu. Staré úseky, zvláště před vznikem ETH, nejsou automaticky vyplňovány smyšlenými hodnotami. Údaje se mohou lišit od kurzu tvé burzy. Tato aplikace neposkytuje investiční doporučení.</p><p>🛡️ Přihlášení, registrace a ověření e-mailu používají zabezpečený účtový systém. Správce může účty blokovat a spravovat.</p></div>
 </section>
-</main><footer>© 2026 Jiří Janoušek · Moje krypto · <a href="/support.html">❤️ Podpora aplikace</a> · <a href="https://jirijanousek.cz/" target="_blank" rel="noopener noreferrer">jirijanousek.cz ↗</a><span>Historické výsledky nejsou zárukou budoucích výnosů.</span></footer>
+</main><footer class="site-common-footer"><div class="site-footer-top"><strong>Moje krypto · Jiří Janoušek</strong><a class="site-footer-support" href="/support.html">💛 Podpořte projekt Moje krypto</a></div><nav class="footer-legal" aria-label="Právní informace"><a href="/legal.php?view=terms">Podmínky používání</a><a href="/legal.php?view=legal">Právní upozornění</a><a href="/legal.php?view=privacy">Ochrana údajů / GDPR</a><a href="/legal.php?view=cookies">Cookies</a><button type="button" data-cookie-settings>Nastavení cookies</button><a href="https://jirijanousek.cz/" target="_blank" rel="noopener noreferrer">jirijanousek.cz ↗</a></nav><p>© 2026 Jiří Janoušek · Moje krypto</p></footer>
 </div></div>
 <dialog id="transaction-dialog"><form id="transaction-form" method="dialog"><div class="modal-top"><h2 id="modal-title">Nová transakce</h2><button id="close-modal" type="button" class="logout" aria-label="Zavřít">✕</button></div><div class="form-columns">
 <label>Datum<input type="date" id="tx-date" required></label><label>Aktivum<select id="tx-symbol"><option>BTC</option><option>ETH</option></select></label>
