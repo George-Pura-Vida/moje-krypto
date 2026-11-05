@@ -11,3 +11,12 @@ body{background:#f4f6f9;color:#1e2e41;font-family:system-ui,-apple-system,Segoe 
 .footer-support-button{background:#80324d!important;color:white!important;border-color:#80324d!important}
 @media(max-width:820px){.account-header{flex-direction:column;align-items:flex-start}.account-layout{grid-template-columns:1fr;gap:10px}.welcome{position:static;padding:10px 0}.account-nav{gap:7px}.account-nav a{font-size:12px}.account-card{padding:24px}}
 @media(max-width:600px){.account-header{padding:15px}.account-layout{padding:0 15px;margin:10px auto 45px}.welcome{padding:5px 0}.welcome h1{font-size:33px}.account-card{padding:18px}.account-card h2{font-size:24px}.account-nav .account-nav-support{width:100%;justify-content:center}}
+
+/* Výrazná podpora projektu i pro návštěvníky bez přihlášení. */
+.account-nav a.account-nav-support{background:#80324d;color:#fff;border:1px solid #80324d;box-shadow:0 6px 18px #80324d2b;font-weight:850}
+.account-nav a.account-nav-support:hover,.account-nav a.account-nav-support:focus-visible{background:#68273d;color:#fff}
+.footer-support{margin:25px 0 0;padding:22px 18px;border:1px solid #ead1d9;background:linear-gradient(145deg,#fff6f9,#fffdf9);border-radius:16px;text-align:center}
+.footer-support .footer-support-button{display:inline-flex!important;justify-content:center;align-items:center;gap:8px;min-height:51px;padding:13px 22px;border:1px solid #80324d;border-radius:12px;background:#80324d!important;color:white!important;text-decoration:none!important;font-weight:850;box-shadow:0 8px 18px #80324d31;font-size:15px;line-height:1.4;max-width:100%;white-space:normal}
+.footer-support .footer-support-button:hover,.footer-support .footer-support-button:focus-visible{background:#622439!important;color:white!important;transform:translateY(-1px)}
+.footer-support p{margin:11px 0 0;color:#665b63;line-height:1.5;font-size:13px}
+@media(max-width:600px){.footer-support{padding:16px 12px}.footer-support .footer-support-button{width:100%;padding:12px 14px;font-size:14px}}
