@@ -1,0 +1,10 @@
+/storage/
+/var/
+/.env
+/.env.*
+/config.local.php
+*.sqlite
+*.sqlite3
+*.db
+*.bak
+*.log

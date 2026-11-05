@@ -1,0 +1,13 @@
+:root{background:#f4f6f9;color:#1e2e41;--gold:#d6a141;--line:#dfe6ee}
+body{background:#f4f6f9;color:#1e2e41;font-family:system-ui,-apple-system,Segoe UI,sans-serif}a{color:#79551c}
+.account-header{max-width:1180px;display:flex;justify-content:space-between;align-items:center;gap:18px;margin:0 auto;padding:18px 22px}
+.account-header .brand{font-family:inherit;color:#17263d;letter-spacing:-.045em;font-size:23px;gap:10px;white-space:nowrap}.account-header .brand strong{color:#be8c32}.account-header .brand small{font-size:11px;letter-spacing:0;color:#778698}
+.account-nav{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.account-nav a{display:inline-flex;align-items:center;min-height:40px;padding:8px 12px;border:1px solid #dfe6ee;background:white;color:#45576b;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px}
+.account-nav a:hover{background:#eef3f9}.account-nav a.account-nav-support{background:#80324d;color:white;border-color:#80324d}
+.account-layout{max-width:1180px;gap:40px}.welcome{padding-top:25px}.welcome h1{font-family:system-ui,-apple-system,Segoe UI,sans-serif;font-weight:850;letter-spacing:-.055em}.welcome em{font-style:normal;color:#bd8b37}
+.account-benefits{margin-top:22px}.account-benefits p{font-size:14px;margin:10px 0;color:#4d6276}.account-card{background:white;border:1px solid #dfe6ee;box-shadow:0 14px 35px #17263d0d}.account-card h2{color:#17263d}
+.primary{background:#17263d;color:#fff;border-color:#17263d}.primary:hover{background:#29476b}.secondary{background:#f8fafc;border-color:#dfe6ee;color:#394e64}
+.field input{background:#fbfcfe;border:1px solid #d8e1eb}.field input:focus{border-color:#d6a141;box-shadow:0 0 0 3px #d6a14130}.password-wrap .eye{color:#465b72}
+.footer-support-button{background:#80324d!important;color:white!important;border-color:#80324d!important}
+@media(max-width:820px){.account-header{flex-direction:column;align-items:flex-start}.account-layout{grid-template-columns:1fr;gap:10px}.welcome{position:static;padding:10px 0}.account-nav{gap:7px}.account-nav a{font-size:12px}.account-card{padding:24px}}
+@media(max-width:600px){.account-header{padding:15px}.account-layout{padding:0 15px;margin:10px auto 45px}.welcome{padding:5px 0}.welcome h1{font-size:33px}.account-card{padding:18px}.account-card h2{font-size:24px}.account-nav .account-nav-support{width:100%;justify-content:center}}
