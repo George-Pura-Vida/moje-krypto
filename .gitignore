@@ -1,6 +1,10 @@
 config.local.php
 storage/*
 !storage/.htaccess
+/var/
+*.sqlite
+*.sqlite3
+*.db
 *.log
 .DS_Store
 .env

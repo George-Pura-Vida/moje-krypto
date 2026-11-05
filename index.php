@@ -1,23 +1,12 @@
 <?php
 declare(strict_types=1);
-ini_set('display_errors','0');
-ini_set('log_errors','1');
-header('X-Content-Type-Options: nosniff');
-header('Referrer-Policy: same-origin');
-header('X-Frame-Options: DENY');
-header('Cache-Control: private, no-store');
-header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
-$https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS']!=='off') || (($_SERVER['HTTP_X_FORWARDED_PROTO']??'')==='https');
-session_name('MOKRYPTOSID');
-session_set_cookie_params(['lifetime'=>0,'path'=>'/','secure'=>$https,'httponly'=>true,'samesite'=>'Lax']);
-session_start();
-$_SESSION['csrf'] ??= bin2hex(random_bytes(24));
-$dir=__DIR__.'/storage';
-$adminFile=$dir.'/admin.php';
-$dataFile=$dir.'/data.php';
-$hasAdmin=is_file($adminFile);
-$logged=($_SESSION['admin']??false)===true;
+require __DIR__.'/auth/bootstrap.php';
+auth_boot();
+$user=auth_user();
+$logged=$user!==null;
 $api=(string)($_GET['api']??'');
+$dir=__DIR__.'/storage';
+$dataFile=$logged?auth_dir().'/portfolio-user-'.((int)$user['id']).'.php':'';
 function readStore(string $file,mixed $default):mixed{
  if(!is_file($file))return $default;
  $s=@file_get_contents($file);$prefix="<?php exit; ?>\n";
@@ -41,15 +30,6 @@ function csrf():void{
   if(isset($_GET['api']))reply(['error'=>'Relace vypršela. Obnov stránku.'],403);
   http_response_code(403);exit('Neplatný bezpečnostní token.');
  }
-}
-function secret():string{
- $v=getenv('MOJE_KRYPTO_SETUP_TOKEN');
- if(is_string($v)&&strlen($v)>=20)return $v;
- $f=__DIR__.'/config.local.php';
- if(!is_file($f))return '';
- $config=include $f;
- $v=is_array($config)?($config['setup_token']??''):'';
- return is_string($v)&&strlen($v)>=20?$v:'';
 }
 function fetchJson(string $url):?array{
  if(function_exists('curl_init')){
@@ -76,33 +56,24 @@ function cached(string $key,int $ttl,callable $fetch):array{
  return ['error'=>'Tržní data nyní nejsou dostupná; možný limit externí API.'];
 }
 if($_SERVER['REQUEST_METHOD']==='POST'&&isset($_POST['form_action'])){
- csrf();$a=(string)$_POST['form_action'];
- if($a==='setup'&&!$hasAdmin){
-  $token=secret();$email=strtolower(trim((string)($_POST['email']??'')));$pwd=(string)($_POST['password']??'');
-  if($token===''||!hash_equals($token,(string)($_POST['setup_token']??'')))$formError='Neplatný nebo nenastavený instalační klíč.';
-  elseif(!filter_var($email,FILTER_VALIDATE_EMAIL))$formError='Nesprávný e-mail.';
-  elseif(strlen($pwd)<12)$formError='Heslo musí mít alespoň 12 znaků.';
-  elseif(!writeStore($adminFile,['email'=>$email,'hash'=>password_hash($pwd,PASSWORD_DEFAULT)]))$formError='Úložiště není zapisovatelné. Zkontroluj práva storage.';
-  else{session_regenerate_id(true);$_SESSION['admin']=true;$_SESSION['csrf']=bin2hex(random_bytes(24));header('Location: ./');exit;}
- }elseif($a==='login'&&$hasAdmin){
-  $limitFile=$dir.'/login-attempts.php';$limits=readStore($limitFile,[]);$ip=hash('sha256',(string)($_SERVER['REMOTE_ADDR']??'unknown'));$now=time();
-  $attempt=$limits[$ip]??['n'=>0,'until'=>$now+900];
-  if($now>($attempt['until']??0))$attempt=['n'=>0,'until'=>$now+900];
-  $rec=readStore($adminFile,[]);$email=strtolower(trim((string)($_POST['email']??'')));$pwd=(string)($_POST['password']??'');
-  if(($attempt['n']??0)>=8){$formError='Příliš mnoho pokusů. Zkus přihlášení za 15 minut.';}
-  elseif(hash_equals((string)($rec['email']??''),$email)&&password_verify($pwd,(string)($rec['hash']??''))){
-   unset($limits[$ip]);writeStore($limitFile,$limits);
-   session_regenerate_id(true);$_SESSION['admin']=true;$_SESSION['csrf']=bin2hex(random_bytes(24));header('Location: ./');exit;
-  }else{$limits[$ip]=['n'=>($attempt['n']??0)+1,'until'=>$attempt['until']];writeStore($limitFile,$limits);usleep(250000);$formError='Nesprávný e-mail nebo heslo.';}
- }elseif($a==='logout'&&$logged){
-  $_SESSION=[];session_regenerate_id(true);header('Location: ./');exit;
+ csrf();
+ if(($_POST['form_action']??'')==='logout' && $logged){
+   auth_logout();header('Location: /account.php?view=login',true,303);exit;
  }
+ http_response_code(400);exit('Nepovolená akce.');
 }
+if(!$logged && $api===''){header('Location: /account.php?view=login',true,303);exit;}
 require_once __DIR__.'/market-data.php';
 if($api!==''){
  if(!$logged)reply(['error'=>'Přihlas se prosím.'],401);
  if($api==='data'){
-  if($_SERVER['REQUEST_METHOD']==='GET')reply(['data'=>readStore($dataFile,['assets'=>[],'transactions'=>[]])]);
+  if($_SERVER['REQUEST_METHOD']==='GET'){
+   if(auth_is_admin($user)&&!is_file($dataFile)&&is_file($dir.'/data.php')){
+     $legacy=readStore($dir.'/data.php',['assets'=>[],'transactions'=>[]]);
+     if(is_array($legacy)&&isset($legacy['assets'],$legacy['transactions']))writeStore($dataFile,$legacy);
+   }
+   reply(['data'=>readStore($dataFile,['assets'=>[],'transactions'=>[]])]);
+  }
   if($_SERVER['REQUEST_METHOD']==='POST'){
    csrf();$raw=file_get_contents('php://input',false,null,0,2500001);
    if(!is_string($raw)||strlen($raw)>2500000)reply(['error'=>'Data přesahují limit 2,5 MB.'],413);
@@ -131,23 +102,7 @@ if($api!==''){
 <title>Moje krypto | Jiří Janoušek</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css?v=20261105d">
 <?php if($logged):?><script src="charts.js?v=20261105d" defer></script><script src="models.js" defer></script><script src="data-tools.js?v=20261105d" defer></script><script src="app.js?v=20261105d" defer></script><?php endif;?>
 </head><body>
-<?php if(!$logged):?>
-<div class="auth-scene"><div class="auth-card"><div class="mark">₿</div>
-<div class="eyebrow">JIŘÍ JANOUŠEK · OSOBNÍ FINANCE</div><h1><?= $hasAdmin?'Vítej v Moje krypto':'První nastavení přístupu' ?></h1>
-<p class="subtle"><?= $hasAdmin?'Přihlášení do tvého soukromého finančního dashboardu.':'Pouze jeden účet administrátora. Bez veřejných registrací.' ?></p>
-<?php if(isset($formError)):?><p class="form-error"><?=htmlspecialchars($formError,ENT_QUOTES)?></p><?php endif;?>
-<?php if(!$hasAdmin && secret()===''):?>
-<p class="form-help">🔐 Pro první aktivaci nejprve na Webkitty vytvoř soubor <code>config.local.php</code> podle <code>config.example.php</code> a nastav vlastní instalační klíč (alespoň 20 znaků). Pak obnov stránku.</p>
-<?php else:?>
-<form method="post" class="auth-form"><input type="hidden" name="csrf" value="<?=htmlspecialchars((string)($_SESSION['csrf']??''),ENT_QUOTES)?>">
-<input type="hidden" name="form_action" value="<?=$hasAdmin?'login':'setup'?>">
-<?php if(!$hasAdmin):?><label>Instalační klíč<input name="setup_token" type="password" required autocomplete="off"></label><?php endif;?>
-<label>E-mail<input type="email" name="email" required autocomplete="username" placeholder="e-mail administrátora"></label>
-<label>Heslo<input type="password" name="password" required autocomplete="<?=$hasAdmin?'current-password':'new-password'?>" minlength="<?=$hasAdmin?'1':'12'?>"></label>
-<button class="btn gold wide" type="submit"><?=$hasAdmin?'Přihlásit se →':'Vytvořit administrátora →'?></button></form>
-<?php endif;?>
-<div class="auth-footer">🔒 Bez veřejné registrace · Údaje na tvém serveru</div></div></div>
-<?php else:?>
+<?php if($logged):?>
 <div class="app-layout"><div id="mobile-shade"></div><aside id="sidebar" class="sidebar">
 <div class="brand"><div class="brand-icon">₿</div><div><b>Moje krypto</b><small>investiční centrum</small></div></div>
 <div class="nav-label">MOJE ANALYTIKA</div><nav id="navigation" aria-label="Navigace">
@@ -158,12 +113,12 @@ if($api!==''){
 <button class="nav-link" data-page="forecast"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V9m8 11V4m8 16v-8 M2 21h20"/></svg> <span>Predikce & scénáře</span></button>
 <button class="nav-link" data-page="goals"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 M12 7a5 5 0 1 0 5 5 M12 12l9-9 M16 3h5v5"/></svg> <span>Cesta k cíli</span></button>
 <button class="nav-link" data-page="settings"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16 M4 12h16 M4 18h16 M8 3v6 M16 9v6 M9 15v6"/></svg> <span>Nastavení & data</span></button>
-</nav><div class="sidebar-bottom"><p>🔐 Soukromá evidence. Kurzy: CoinGecko / Coinbase; grafy také Kraken.</p><a href="https://jirijanousek.cz/" target="_blank" rel="noopener noreferrer">jirijanousek.cz ↗</a></div>
+<a href="/account.php?view=profile" class="nav-link">👤 <span>Můj účet</span></a></nav><div class="sidebar-bottom"><p>🔐 Soukromá evidence. Kurzy: CoinGecko / Coinbase; grafy také Kraken.</p><a href="https://jirijanousek.cz/" target="_blank" rel="noopener noreferrer">jirijanousek.cz ↗</a></div>
 </aside>
 <div class="workspace">
 <header class="header"><div class="header-left"><button class="burger" id="burger" aria-label="Otevřít menu" aria-expanded="false">☰</button><div><div class="eyebrow">JIŘÍ JANOUŠEK / INVESTICE</div><h1 id="page-title">Přehled kryptoměn</h1></div></div>
 <div class="header-actions"><span id="online-status" class="online-status">● Načítání cen</span><button class="btn gold" id="add-transaction">＋ Převod</button>
-<form method="post"><input type="hidden" name="form_action" value="logout"><input type="hidden" name="csrf" value="<?=htmlspecialchars((string)($_SESSION['csrf']??''),ENT_QUOTES)?>"><button class="logout" title="Odhlásit se" aria-label="Odhlásit se" type="submit">⎋</button></form></div></header>
+<a href="/account.php?view=profile" class="logout" title="Můj účet" aria-label="Můj účet">👤</a><?php if(auth_is_admin($user)):?><a href="/admin.php" class="logout" title="Správa uživatelů" aria-label="Správa uživatelů">🛡️</a><?php endif;?><form method="post"><input type="hidden" name="form_action" value="logout"><input type="hidden" name="csrf" value="<?=htmlspecialchars((string)($_SESSION['csrf']??''),ENT_QUOTES)?>"><button class="logout" title="Odhlásit se" aria-label="Odhlásit se" type="submit">⎋</button></form></div></header>
 <main>
 <section id="page-dashboard" class="page active">
 <div id="info-banner" class="banner">💡 Nejdříve doplň stav portfolia nebo importuj data. Předchozí převody do peněženky samy o sobě neurčují skutečný zisk.</div>
@@ -230,7 +185,7 @@ if($api!==''){
 <article class="panel"><h2>📁 Import / export / tisk</h2><p>Bez připojení k privátním klíčům. Importuj výpis transakcí, zálohuj údaje a vytiskni report.</p>
 <div class="button-stack"><label class="btn gold file-btn">⬆ Import Excel / Trezor CSV / JSON<input id="import-file" type="file" accept=".xlsx,.json,.csv" multiple hidden></label><button class="btn" id="paste-import">📋 Vložit data JSON / CSV</button><button class="btn" id="export-xlsx">⬇ Export do Excelu (.xlsx)</button><button class="btn" id="export-json">⬇ Export všeho do JSON</button><button class="btn" id="export-csv">⬇ Export převodů do CSV</button><button class="btn" id="print">⬇ Export PDF / tisk</button><button class="btn danger" id="erase">🗑 Smazat evidenci</button></div><div class="note">Excel (.xlsx) z této aplikace obsahuje portfolio i transakce. Trezor CSV lze vybrat pro BTC a ETH současně; duplicitní ID se přeskočí a odchozí množství zahrnuje poplatek. Import JSON / Excel nahradí evidenci po potvrzení. Staré .xls nejprve ulož jako .xlsx. PDF otevře tiskový náhled pro uložení do PDF.</div>
 </article></div>
-<div class="panel bottom-panel"><h2>ℹ️ O datech a predikcích</h2><p>Tržní zdroje: CoinGecko, Coinbase, Kraken; dříve <a href="https://www.cryptocompare.com/" target="_blank" rel="noopener noreferrer">CryptoCompare / CoinDesk Data</a>. Historie z CoinGecko je v CZK. Záložní historie Kraken je v USD přepočtených dnešním USD/CZK, nikoli historickým kurzem. Datum, zdroj a neúplné pokrytí jsou uvedené u grafu. Staré úseky, zvláště před vznikem ETH, nejsou automaticky vyplňovány smyšlenými hodnotami. Údaje se mohou lišit od kurzu tvé burzy. Tato aplikace neposkytuje investiční doporučení.</p><p>🛡️ Registrace je vypnutá. Přihlášení je možné pouze přes vytvořený administrátorský účet. Heslo není možné měnit z aplikace; správa probíhá na serveru.</p></div>
+<div class="panel bottom-panel"><h2>ℹ️ O datech a predikcích</h2><p>Tržní zdroje: CoinGecko, Coinbase, Kraken; dříve <a href="https://www.cryptocompare.com/" target="_blank" rel="noopener noreferrer">CryptoCompare / CoinDesk Data</a>. Historie z CoinGecko je v CZK. Záložní historie Kraken je v USD přepočtených dnešním USD/CZK, nikoli historickým kurzem. Datum, zdroj a neúplné pokrytí jsou uvedené u grafu. Staré úseky, zvláště před vznikem ETH, nejsou automaticky vyplňovány smyšlenými hodnotami. Údaje se mohou lišit od kurzu tvé burzy. Tato aplikace neposkytuje investiční doporučení.</p><p>🛡️ Přihlášení, registrace a ověření e-mailu používají zabezpečený účtový systém. Správce může účty blokovat a spravovat.</p></div>
 </section>
 </main><footer>© 2026 Jiří Janoušek · Moje krypto · <a href="https://jirijanousek.cz/" target="_blank" rel="noopener noreferrer">jirijanousek.cz ↗</a><span>Historické výsledky nejsou zárukou budoucích výnosů.</span></footer>
 </div></div>

@@ -5,7 +5,6 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -14,15 +13,13 @@ jobs:
         uses: actions/checkout@v4
       - name: PHP syntax
         run: |
-          php -l index.php
-          php -l config.example.php
+          for f in index.php market-data.php account.php admin.php auth/bootstrap.php auth/mail.php config.example.php; do php -l "$f"; done
       - name: JavaScript syntax
         run: |
-          node --check charts.js
-          node --check models.js
-          node --check app.js
+          for f in charts.js models.js data-tools.js app.js account.js; do node --check "$f"; done
       - name: Public repository has no private config
         run: |
           test ! -f config.local.php
           test ! -f storage/data.php
           test ! -f storage/admin.php
+          test ! -d var

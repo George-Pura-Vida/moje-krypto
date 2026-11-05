@@ -1,0 +1,131 @@
+{
+  "footer": [
+    "S přáním hezkého dne",
+    "Jiří Janoušek",
+    "MOJE KRYPTO",
+    "",
+    "🌐 {home_url}",
+    "✉️ info@jirijanousek.cz",
+    "☎️ +420 777 796 148",
+    "",
+    "Tato zpráva byla odeslána automaticky v souvislosti s Vaším účtem. Nejde o obchodní sdělení."
+  ],
+  "templates": {
+    "verify": {
+      "subject": "📩 Potvrďte svůj e-mail | MOJE KRYPTO",
+      "lines": [
+        "děkujeme Vám za registraci do aplikace MOJE KRYPTO. Svou e-mailovou adresu a přístup do aplikace potvrďte pomocí tohoto odkazu:",
+        "",
+        "🔗 Potvrdit e-mail a aktivovat přístup:",
+        "{action_url}",
+        "",
+        "⏳ Odkaz platí 24 hodin a lze jej použít pouze jednou.",
+        "",
+        "✅ Otevřením odkazu se Váš e-mail automaticky potvrdí, přístup se aktivuje a aplikace Vás rovnou přihlásí. Na schválení správcem nečekáte a žádné další tlačítko mačkat nemusíte.",
+        "",
+        "🔄 Pokud platnost odkazu vypršela, vyžádejte si nový:",
+        "{help_url}",
+        "",
+        "Pokud jste si účet nezaložili, odkaz nepoužívejte. V případě dotazů nás kontaktujte na info@jirijanousek.cz."
+      ]
+    },
+    "reset": {
+      "subject": "🔐 Obnovení hesla | MOJE KRYPTO",
+      "lines": [
+        "obdrželi jsme žádost o obnovení hesla k Vašemu účtu v aplikaci MOJE KRYPTO. Nové heslo si můžete nastavit prostřednictvím následujícího odkazu:",
+        "",
+        "🔗 Nastavit nové heslo:",
+        "{action_url}",
+        "",
+        "⏳ Odkaz platí 30 minut a lze jej použít pouze jednou.",
+        "",
+        "Po změně hesla budou ukončena předchozí přihlášení k Vašemu účtu. Poté se přihlaste novým heslem.",
+        "",
+        "🔄 Pokud platnost odkazu vypršela, vyžádejte si nový:",
+        "{help_url}",
+        "",
+        "Pokud jste o obnovení hesla nežádali, odkaz nepoužívejte. Bez potvrzení této akce se Vaše heslo nezmění. Své heslo nikomu neposílejte."
+      ]
+    },
+    "email": {
+      "subject": "✉️ Potvrďte novou e-mailovou adresu | MOJE KRYPTO",
+      "lines": [
+        "obdrželi jsme žádost o změnu e-mailové adresy u Vašeho účtu v aplikaci MOJE KRYPTO. Pro potvrzení nové adresy otevřete následující odkaz:",
+        "",
+        "🔗 Potvrdit novou e-mailovou adresu:",
+        "{action_url}",
+        "",
+        "⏳ Odkaz platí 30 minut a lze jej použít pouze jednou.",
+        "",
+        "🔑 Při potvrzení musíte být přihlášeni ke svému účtu původní e-mailovou adresou. Pokud přihlášeni nejste, nejprve se přihlaste zde a potom znovu otevřete potvrzovací odkaz:",
+        "{login_url}",
+        "",
+        "Do potvrzení změny zůstává platná původní e-mailová adresa. Po potvrzení budou předchozí přihlášení ukončena. Následně se přihlaste novou adresou a stávajícím heslem.",
+        "",
+        "Pokud platnost odkazu vypršela, přihlaste se původní adresou a požádejte o změnu znovu v nastavení účtu.",
+        "",
+        "Pokud jste o změnu nežádali, odkaz nepoužívejte a kontaktujte nás na info@jirijanousek.cz."
+      ]
+    },
+    "admin-registration": {
+      "subject": "🆕 Nová registrace | MOJE KRYPTO",
+      "lines": [
+        "v aplikaci MOJE KRYPTO se zaregistroval nový uživatel. Tato zpráva je pouze informativní; ruční schválení není potřeba.",
+        "",
+        "👤 Jméno: {name}",
+        "✉️ E-mail: {email}",
+        "☎️ Telefon pro následné kontaktní ověření: {phone}",
+        "{company_line}",
+        "",
+        "✅ Přístup se aktivuje automaticky, jakmile uživatel potvrdí svůj e-mail. Zadání telefonu samo o sobě nepotvrzuje vlastnictví čísla.",
+        "",
+        "🔗 Správa uživatelů:",
+        "{action_url}",
+        "",
+        "Po přihlášení správcovským účtem můžete zkontrolovat údaje nebo podle potřeby omezit přístup. Odkaz do správy sám o sobě uživatele neaktivuje. Zpráva neobsahuje heslo ani aktivační token uživatele."
+      ]
+    },
+    "approved": {
+      "subject": "✅ Váš přístup je aktivní | MOJE KRYPTO",
+      "lines": [
+        "Váš e-mail je ověřený a přístup do aplikace MOJE KRYPTO je nyní aktivní. Můžete se přihlásit:",
+        "",
+        "🔗 Přihlásit se do aplikace:",
+        "{action_url}",
+        "",
+        "Použijte svou registrovanou e-mailovou adresu a heslo. Tento odkaz neobsahuje jednorázový ověřovací token; jde o běžnou přihlašovací stránku.",
+        "",
+        "🔐 Pokud si heslo nepamatujete, můžete si nastavit nové:",
+        "{help_url}",
+        "",
+        "Výsledky jsou orientační. Kryptoměny mohou prudce kolísat; budoucí výnos není zaručen. V případě dotazů nás kontaktujte na info@jirijanousek.cz."
+      ]
+    },
+    "rejected": {
+      "subject": "ℹ️ Informace o Vašem přístupu | MOJE KRYPTO",
+      "lines": [
+        "Vaše žádost o přístup do aplikace MOJE KRYPTO nebyla schválena. K tomuto účtu se nyní nelze přihlásit.",
+        "",
+        "💬 Pokud potřebujete vysvětlení nebo chcete požádat o přezkoumání, napište nám na info@jirijanousek.cz.",
+        "",
+        "🔗 Kontakt:",
+        "{action_url}",
+        "",
+        "Změna hesla ani nové ověření e-mailu nenahrazují schválení přístupu."
+      ]
+    },
+    "pending": {
+      "subject": "⏸️ Váš přístup byl pozastaven | MOJE KRYPTO",
+      "lines": [
+        "přístup k Vašemu účtu v aplikaci MOJE KRYPTO byl pozastaven. Předchozí přihlášení byla ukončena a účet nyní čeká na nové schválení přístupu.",
+        "",
+        "💬 Pokud potřebujete vysvětlení, kontaktujte nás na info@jirijanousek.cz.",
+        "",
+        "🔗 Kontakt:",
+        "{action_url}",
+        "",
+        "O případném opětovném schválení přístupu Vás budeme informovat e-mailem."
+      ]
+    }
+  }
+}
