@@ -6,3 +6,11 @@ Require all denied
 Header always set X-Content-Type-Options "nosniff"
 Header always set Referrer-Policy "same-origin"
 </IfModule>
+<FilesMatch "(?i)^(?:.*\.(?:sqlite|sqlite3|db|bak|log|sql|env)|README-auth\.md)$">
+Require all denied
+</FilesMatch>
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^(?:auth|storage)(?:/|$) - [F,L]
+RewriteRule ^config\.local\.php$ - [F,L]
+</IfModule>

@@ -7,3 +7,7 @@ storage/*
 .env.*
 !config.example.php
 node_modules/
+/var/
+*.sqlite
+*.sqlite3
+*.db

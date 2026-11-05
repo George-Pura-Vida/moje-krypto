@@ -1,23 +1,12 @@
 <?php
 declare(strict_types=1);
-ini_set('display_errors','0');
-ini_set('log_errors','1');
-header('X-Content-Type-Options: nosniff');
-header('Referrer-Policy: same-origin');
-header('X-Frame-Options: DENY');
-header('Cache-Control: private, no-store');
-header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
-$https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS']!=='off') || (($_SERVER['HTTP_X_FORWARDED_PROTO']??'')==='https');
-session_name('MOKRYPTOSID');
-session_set_cookie_params(['lifetime'=>0,'path'=>'/','secure'=>$https,'httponly'=>true,'samesite'=>'Lax']);
-session_start();
-$_SESSION['csrf'] ??= bin2hex(random_bytes(24));
-$dir=__DIR__.'/storage';
-$adminFile=$dir.'/admin.php';
-$dataFile=$dir.'/data.php';
-$hasAdmin=is_file($adminFile);
-$logged=($_SESSION['admin']??false)===true;
+require __DIR__.'/auth/bootstrap.php';
+auth_boot();
+$user=auth_user();
+$logged=$user!==null;
 $api=(string)($_GET['api']??'');
+$dir=__DIR__.'/storage';
+$dataFile=$logged?auth_dir().'/portfolio-user-'.((int)$user['id']).'.php':'';
 function readStore(string $file,mixed $default):mixed{
  if(!is_file($file))return $default;
  $s=@file_get_contents($file);$prefix="<?php exit; ?>\n";
@@ -41,15 +30,6 @@ function csrf():void{
   if(isset($_GET['api']))reply(['error'=>'Relace vypršela. Obnov stránku.'],403);
   http_response_code(403);exit('Neplatný bezpečnostní token.');
  }
-}
-function secret():string{
- $v=getenv('MOJE_KRYPTO_SETUP_TOKEN');
- if(is_string($v)&&strlen($v)>=20)return $v;
- $f=__DIR__.'/config.local.php';
- if(!is_file($f))return '';
- $config=include $f;
- $v=is_array($config)?($config['setup_token']??''):'';
- return is_string($v)&&strlen($v)>=20?$v:'';
 }
 function fetchJson(string $url):?array{
  if(function_exists('curl_init')){
@@ -76,32 +56,21 @@ function cached(string $key,int $ttl,callable $fetch):array{
  return ['error'=>'Tržní data nyní nejsou dostupná; možný limit externí API.'];
 }
 if($_SERVER['REQUEST_METHOD']==='POST'&&isset($_POST['form_action'])){
- csrf();$a=(string)$_POST['form_action'];
- if($a==='setup'&&!$hasAdmin){
-  $token=secret();$email=strtolower(trim((string)($_POST['email']??'')));$pwd=(string)($_POST['password']??'');
-  if($token===''||!hash_equals($token,(string)($_POST['setup_token']??'')))$formError='Neplatný nebo nenastavený instalační klíč.';
-  elseif(!filter_var($email,FILTER_VALIDATE_EMAIL))$formError='Nesprávný e-mail.';
-  elseif(strlen($pwd)<12)$formError='Heslo musí mít alespoň 12 znaků.';
-  elseif(!writeStore($adminFile,['email'=>$email,'hash'=>password_hash($pwd,PASSWORD_DEFAULT)]))$formError='Úložiště není zapisovatelné. Zkontroluj práva storage.';
-  else{session_regenerate_id(true);$_SESSION['admin']=true;$_SESSION['csrf']=bin2hex(random_bytes(24));header('Location: ./');exit;}
- }elseif($a==='login'&&$hasAdmin){
-  $limitFile=$dir.'/login-attempts.php';$limits=readStore($limitFile,[]);$ip=hash('sha256',(string)($_SERVER['REMOTE_ADDR']??'unknown'));$now=time();
-  $attempt=$limits[$ip]??['n'=>0,'until'=>$now+900];
-  if($now>($attempt['until']??0))$attempt=['n'=>0,'until'=>$now+900];
-  $rec=readStore($adminFile,[]);$email=strtolower(trim((string)($_POST['email']??'')));$pwd=(string)($_POST['password']??'');
-  if(($attempt['n']??0)>=8){$formError='Příliš mnoho pokusů. Zkus přihlášení za 15 minut.';}
-  elseif(hash_equals((string)($rec['email']??''),$email)&&password_verify($pwd,(string)($rec['hash']??''))){
-   unset($limits[$ip]);writeStore($limitFile,$limits);
-   session_regenerate_id(true);$_SESSION['admin']=true;$_SESSION['csrf']=bin2hex(random_bytes(24));header('Location: ./');exit;
-  }else{$limits[$ip]=['n'=>($attempt['n']??0)+1,'until'=>$attempt['until']];writeStore($limitFile,$limits);usleep(250000);$formError='Nesprávný e-mail nebo heslo.';}
- }elseif($a==='logout'&&$logged){
-  $_SESSION=[];session_regenerate_id(true);header('Location: ./');exit;
- }
+ if(($_POST['form_action']??'')==='logout'){auth_csrf();auth_logout();header('Location: /account.php?view=login',true,303);exit;}
+ http_response_code(400);exit('Nepovolená akce.');
 }
+if(!$logged && $api===''){header('Location: /account.php?view=login',true,303);exit;}
 if($api!==''){
  if(!$logged)reply(['error'=>'Přihlas se prosím.'],401);
  if($api==='data'){
-  if($_SERVER['REQUEST_METHOD']==='GET')reply(['data'=>readStore($dataFile,['assets'=>[],'transactions'=>[]])]);
+  if($_SERVER['REQUEST_METHOD']==='GET'){
+    // One-time safe migration of a legacy owner-only file into the new private account store.
+    if(auth_is_admin($user)&&!is_file($dataFile)&&is_file($dir.'/data.php')){
+      $legacy=readStore($dir.'/data.php',['assets'=>[],'transactions'=>[]]);
+      if(is_array($legacy)&&isset($legacy['assets'],$legacy['transactions']))writeStore($dataFile,$legacy);
+    }
+    reply(['data'=>readStore($dataFile,['assets'=>[],'transactions'=>[]])]);
+   }
   if($_SERVER['REQUEST_METHOD']==='POST'){
    csrf();$raw=file_get_contents('php://input',false,null,0,2500001);
    if(!is_string($raw)||strlen($raw)>2500000)reply(['error'=>'Data přesahují limit 2,5 MB.'],413);
@@ -162,23 +131,7 @@ if($api!==''){
 <title>Moje krypto | Jiří Janoušek</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css">
 <?php if($logged):?><script src="charts.js" defer></script><script src="models.js" defer></script><script src="app.js" defer></script><?php endif;?>
 </head><body>
-<?php if(!$logged):?>
-<div class="auth-scene"><div class="auth-card"><div class="mark">₿</div>
-<div class="eyebrow">JIŘÍ JANOUŠEK · OSOBNÍ FINANCE</div><h1><?= $hasAdmin?'Vítej v Moje krypto':'První nastavení přístupu' ?></h1>
-<p class="subtle"><?= $hasAdmin?'Přihlášení do tvého soukromého finančního dashboardu.':'Pouze jeden účet administrátora. Bez veřejných registrací.' ?></p>
-<?php if(isset($formError)):?><p class="form-error"><?=htmlspecialchars($formError,ENT_QUOTES)?></p><?php endif;?>
-<?php if(!$hasAdmin && secret()===''):?>
-<p class="form-help">🔐 Pro první aktivaci nejprve na Webkitty vytvoř soubor <code>config.local.php</code> podle <code>config.example.php</code> a nastav vlastní instalační klíč (alespoň 20 znaků). Pak obnov stránku.</p>
-<?php else:?>
-<form method="post" class="auth-form"><input type="hidden" name="csrf" value="<?=htmlspecialchars((string)($_SESSION['csrf']??''),ENT_QUOTES)?>">
-<input type="hidden" name="form_action" value="<?=$hasAdmin?'login':'setup'?>">
-<?php if(!$hasAdmin):?><label>Instalační klíč<input name="setup_token" type="password" required autocomplete="off"></label><?php endif;?>
-<label>E-mail<input type="email" name="email" required autocomplete="username" placeholder="e-mail administrátora"></label>
-<label>Heslo<input type="password" name="password" required autocomplete="<?=$hasAdmin?'current-password':'new-password'?>" minlength="<?=$hasAdmin?'1':'12'?>"></label>
-<button class="btn gold wide" type="submit"><?=$hasAdmin?'Přihlásit se →':'Vytvořit administrátora →'?></button></form>
-<?php endif;?>
-<div class="auth-footer">🔒 Bez veřejné registrace · Údaje na tvém serveru</div></div></div>
-<?php else:?>
+<?php if($logged):?>
 <div class="app-layout"><div id="mobile-shade"></div><aside id="sidebar" class="sidebar">
 <div class="brand"><div class="brand-icon">₿</div><div><b>Moje krypto</b><small>investiční centrum</small></div></div>
 <div class="nav-label">MOJE ANALYTIKA</div><nav id="navigation" aria-label="Navigace">
@@ -188,12 +141,12 @@ if($api!==''){
 <button class="nav-link" data-page="strategies">🔁 <span>DCA & Buy the Dip</span></button>
 <button class="nav-link" data-page="forecast">🔮 <span>Predikce & scénáře</span></button>
 <button class="nav-link" data-page="settings">⚙️ <span>Nastavení & data</span></button>
-</nav><div class="sidebar-bottom"><p>🔐 Soukromá evidence. Kurzy dodává CryptoCompare / CoinDesk Data.</p><a href="https://jirijanousek.cz/" target="_blank" rel="noopener noreferrer">jirijanousek.cz ↗</a></div>
+<a href="/account.php?view=profile" class="nav-link">👤 <span>Můj účet</span></a></nav><div class="sidebar-bottom"><p>🔐 Soukromá evidence. Kurzy dodává CryptoCompare / CoinDesk Data.</p><a href="https://jirijanousek.cz/" target="_blank" rel="noopener noreferrer">jirijanousek.cz ↗</a></div>
 </aside>
 <div class="workspace">
 <header class="header"><div class="header-left"><button class="burger" id="burger" aria-label="Otevřít menu" aria-expanded="false">☰</button><div><div class="eyebrow">JIŘÍ JANOUŠEK / INVESTICE</div><h1 id="page-title">Přehled kryptoměn</h1></div></div>
 <div class="header-actions"><span id="online-status" class="online-status">● Načítání cen</span><button class="btn gold" id="add-transaction">＋ Převod</button>
-<form method="post"><input type="hidden" name="form_action" value="logout"><input type="hidden" name="csrf" value="<?=htmlspecialchars((string)($_SESSION['csrf']??''),ENT_QUOTES)?>"><button class="logout" title="Odhlásit se" aria-label="Odhlásit se" type="submit">⎋</button></form></div></header>
+<a href="/account.php?view=profile" class="logout" title="Můj účet" aria-label="Můj účet">👤</a><?php if(auth_is_admin($user)):?><a href="/admin.php" class="logout" title="Správa uživatelů" aria-label="Správa uživatelů">🛡️</a><?php endif;?><form method="post"><input type="hidden" name="form_action" value="logout"><input type="hidden" name="csrf" value="<?=htmlspecialchars((string)($_SESSION['csrf']??''),ENT_QUOTES)?>"><button class="logout" title="Odhlásit se" aria-label="Odhlásit se" type="submit">⎋</button></form></div></header>
 <main>
 <section id="page-dashboard" class="page active">
 <div id="info-banner" class="banner">💡 Nejdříve doplň stav portfolia nebo importuj data. Předchozí převody do peněženky samy o sobě neurčují skutečný zisk.</div>
@@ -254,7 +207,7 @@ if($api!==''){
 <article class="panel"><h2>📁 Import / export / tisk</h2><p>Bez připojení k privátním klíčům. Importuj výpis transakcí, zálohuj údaje a vytiskni report.</p>
 <div class="button-stack"><label class="btn gold file-btn">⬆ Import JSON nebo CSV<input id="import-file" type="file" accept=".json,.csv" hidden></label><button class="btn" id="export-json">⬇ Export všeho do JSON</button><button class="btn" id="export-csv">⬇ Export převodů do CSV</button><button class="btn" id="print">🖨 Tisk / PDF</button><button class="btn danger" id="erase">🗑 Smazat evidenci</button></div><div class="note">Import JSON nahrazuje aktuální evidenci. Předem si ji zálohuj. Import CSV předpokládá strukturu exportu z této aplikace.</div>
 </article></div>
-<div class="panel bottom-panel"><h2>ℹ️ O datech a predikcích</h2><p>Tržní zdroj: <a href="https://www.cryptocompare.com/" target="_blank" rel="noopener noreferrer">CryptoCompare / CoinDesk Data</a>. Historické ceny v CZK jsou poskytované externí službou s její dostupností a limity. Staré úseky, zvláště před vznikem ETH, nejsou automaticky vyplňovány smyšlenými hodnotami. Údaje se mohou lišit od kurzu tvé burzy. Tato aplikace neposkytuje investiční doporučení.</p><p>🛡️ Registrace je vypnutá. Přihlášení je možné pouze přes vytvořený administrátorský účet. Heslo není možné měnit z aplikace; správa probíhá na serveru.</p></div>
+<div class="panel bottom-panel"><h2>ℹ️ O datech a predikcích</h2><p>Tržní zdroj: <a href="https://www.cryptocompare.com/" target="_blank" rel="noopener noreferrer">CryptoCompare / CoinDesk Data</a>. Historické ceny v CZK jsou poskytované externí službou s její dostupností a limity. Staré úseky, zvláště před vznikem ETH, nejsou automaticky vyplňovány smyšlenými hodnotami. Údaje se mohou lišit od kurzu tvé burzy. Tato aplikace neposkytuje investiční doporučení.</p><p>🛡️ Přihlášení a registrace fungují stejně jako u Moje renta. Nový účet se aktivuje po e-mailovém ověření; přístup spravuje provozovatel.</p></div>
 </section>
 </main><footer>© 2026 Jiří Janoušek · Moje krypto · <a href="https://jirijanousek.cz/" target="_blank" rel="noopener noreferrer">jirijanousek.cz ↗</a><span>Historické výsledky nejsou zárukou budoucích výnosů.</span></footer>
 </div></div>
