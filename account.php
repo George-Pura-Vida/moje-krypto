@@ -37,13 +37,13 @@ function profile_fields():void{
     echo '</div>';field('email','E-mail / přihlašovací jméno','email',true,254,'username');field('address','Adresa — ulice, číslo, PSČ a obec (nepovinné)','text',false,500,'street-address');
 }
 ?>
-<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="same-origin"><title><?= h($titles[$view]) ?> | Moje krypto</title><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/account.css?v=1"><link rel="stylesheet" href="/account-ui.css?v=1"><script defer src="/account.js?v=1"></script></head>
+<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="same-origin"><title><?= h($titles[$view]) ?> | Moje krypto</title><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/account.css?v=1"><link rel="stylesheet" href="/account-ui.css?v=2"><script defer src="/account.js?v=1"></script></head>
 <body>
 <header class="account-header"><a class="brand" href="/"><img src="/favicon.svg" width="44" height="44" alt=""><span>MOJE <strong>KRYPTO</strong><small>Jiří Janoušek</small></span></a>
 <nav aria-label="Navigace účtu" class="account-nav"><a href="/">📊 Aplikace</a>
 <?php if($user): ?><a href="/account.php?view=profile">👤 Můj účet</a><?php if(auth_is_admin($user)): ?><a href="/admin.php">🛡️ Správa uživatelů</a><?php endif; ?>
 <?php else: ?><a href="/account.php?view=login">🔐 Přihlášení</a><a href="/account.php?view=register">✨ Registrace</a><?php endif; ?>
-<a class="account-nav-support" href="/">❤️ Podpořte projekt</a></nav></header>
+<a class="account-nav-support" href="/support.html">❤️ Podpořte projekt</a></nav></header>
 <main class="account-layout<?= $view==='approvals'?' admin-layout':'' ?>"><aside class="welcome">
 <p class="eyebrow">MOJE KRYPTO · INVESTICE S PLÁNEM</p><h1>Vaše investice.<br><em>Vaše budoucnost s Bitcoinem.</em></h1>
 <p>Vytvořte si osobní účet. Sledujte Bitcoin, Ethereum, své transakce a vývoj investic v přehledné aplikaci.</p>
@@ -109,7 +109,7 @@ $statusLabels=['pending'=>'⏸️ Pozastaveno','approved'=>'✅ Povoleno','rejec
 <p><a href="https://jirijanousek.cz/ochrana-osobnich-udaju/" target="_blank" rel="noopener noreferrer">Další informace o ochraně osobních údajů</a>.</p></div>
 <p class="form-links"><a href="/account.php?view=login">Přihlášení</a> · <a href="/account.php?view=register">Registrace</a></p>
 <?php endif; ?>
-<div class="footer-support"><a class="footer-support-button" href="/"><span aria-hidden="true">❤️</span> Podpořte projekt Moje krypto</a><p>Dobrovolný příspěvek na provoz a rozvoj aplikace.</p></div>
+<div class="footer-support"><a class="footer-support-button" href="/support.html"><span aria-hidden="true">❤️</span> Podpořte projekt Moje krypto</a><p>Dobrovolný příspěvek na provoz a rozvoj aplikace.</p></div>
 <nav class="footer-legal" aria-label="Právní informace"><a href="/account.php?view=privacy">Ochrana osobních údajů</a><a href="https://jirijanousek.cz/" target="_blank" rel="noopener noreferrer">jirijanousek.cz ↗</a></nav>
 <p class="account-footer">© <?= date('Y') ?> Jiří Janoušek · Moje krypto</p></section></main></body></html>
 
