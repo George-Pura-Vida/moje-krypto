@@ -25,7 +25,7 @@
   return {assets,transactions};
  }
  async function init(){
-  setupEvents();runForecast();
+  setupEvents();runForecast();window.addEventListener('resize',fitNumbers);
   try{const res=await fetch('?api=data',{credentials:'same-origin'});const json=await res.json();if(!res.ok)throw Error(json.error||'Načtení dat selhalo');data=validate(json.data);}
   catch(e){notify('⚠️ '+e.message)}
   renderAll();await refreshPrices();
@@ -43,7 +43,7 @@
    pricesAt=json.updated_at;stalePrices=!!json.stale;
    status.textContent=(stalePrices?'● Uložený kurz':'● Online CZK')+' · '+(json.data.source||'trh')+' · '+new Date((pricesAt||Date.now()/1000)*1000).toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'});status.className='online-status '+(stalePrices?'bad':'ok');
   }catch(e){status.textContent='● Data nejsou dostupná';status.className='online-status bad';notify('⚠️ '+e.message);}
-  renderDashboard();
+  renderDashboard();requestAnimationFrame(fitNumbers);
  }
  function asset(sym){return data.assets.find(x=>x.symbol===sym)||{quantity:0,costBasis:null};}
  function portfolio(){
@@ -107,7 +107,8 @@
  function renderSettings(){
   for(const sym of ['BTC','ETH']){const row=asset(sym),id=sym.toLowerCase();$('qty-'+id).value=row.quantity||'';$('cost-'+id).value=row.costBasis??''}
  }
- function renderAll(fill=true){renderDashboard();renderTransactions();if(fill)renderSettings();}
+ function fitNumbers(){document.querySelectorAll('.stat strong,.four-metrics b,.donut-core b').forEach(el=>{el.style.removeProperty('font-size');const width=el.clientWidth;if(width>0&&el.scrollWidth>width){const px=parseFloat(getComputedStyle(el).fontSize);el.style.fontSize=Math.max(12,Math.floor(px*width/el.scrollWidth))+'px';}})}
+ function renderAll(fill=true){renderDashboard();renderTransactions();if(fill)renderSettings();requestAnimationFrame(fitNumbers);}
  function navigate(to){
   page=to;
   const names={dashboard:'Přehled kryptoměn',markets:'Trhy & historické grafy',transactions:'Moje transakce',strategies:'DCA & Buy the Dip',forecast:'Predikce & scénáře',settings:'Nastavení a data',goals:'Cesta k mému cíli'};
@@ -317,12 +318,13 @@
 
  function exportExcel(){try{download(window.KryptoData.xlsx(data),'moje-krypto.xlsx','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');notify('Excel připraven: portfolio a '+data.transactions.length+' transakcí.')}catch(e){notify('⚠️ '+e.message)}}
  async function acceptImport(imported){
-  const next=validate(imported);if(!confirm('Načteno '+next.transactions.length+' transakcí. BTC '+fmt(next.assets.find(a=>a.symbol==='BTC').quantity,8)+' · ETH '+fmt(next.assets.find(a=>a.symbol==='ETH').quantity,10)+'. Nahradit současnou evidenci?'))return false;
+  const next=validate(imported);if(!await reviewImport(next))return false;
   if(data.transactions.length)exportJson();const before=data;data=next;
   try{await persist();renderAll();notify('✅ Import uložen: '+data.transactions.length+' transakcí.');return true}catch(e){data=before;renderAll();throw Error('Import nebyl uložen: '+e.message)}
  }
  async function importFile(e){const files=Array.from(e.target.files||[]);e.target.value='';if(!files.length)return;try{let imported=structuredClone(data);for(const file of files){if(file.size>2400000)throw Error('Limit souboru je 2,4 MB.');const ext=file.name.toLowerCase();if(ext.endsWith('.json'))imported=JSON.parse(await file.text());else if(ext.endsWith('.csv'))imported=window.KryptoData.rowsToData(window.KryptoData.csv(await file.text()),imported);else if(ext.endsWith('.xlsx'))imported=await window.KryptoData.readXlsx(await file.arrayBuffer(),imported);else throw Error('Použij .xlsx, .csv nebo .json.')}await acceptImport(imported)}catch(err){notify('⚠️ '+err.message)}}
  async function importPaste(){try{const text=$('paste-data').value.trim();if(text.length>2400000)throw Error('Limit dat je 2,4 MB.');const imported=text.startsWith('{')?JSON.parse(text):window.KryptoData.rowsToData(window.KryptoData.csv(text),data);if(await acceptImport(imported))$('paste-dialog').close()}catch(e){notify('⚠️ '+e.message)}}
+ function reviewImport(next){return new Promise(resolve=>{const dialog=$('import-review');$('import-review-summary').textContent='Připraveno '+next.transactions.length+' transakcí. BTC '+fmt(next.assets.find(a=>a.symbol==='BTC').quantity,8)+' · ETH '+fmt(next.assets.find(a=>a.symbol==='ETH').quantity,10)+'. Současná evidence bude nahrazena těmito daty; pokud obsahuje transakce, nejprve se stáhne její JSON záloha.';const finish=ok=>{dialog.close();dialog.removeEventListener('cancel',cancel);resolve(ok)};const cancel=e=>{e.preventDefault();finish(false)};$('import-review-yes').onclick=()=>finish(true);$('import-review-no').onclick=()=>finish(false);dialog.addEventListener('cancel',cancel);dialog.showModal()})}
  function runGoal(){
   const coin=$('g-coin').value,price=n('g-price')||prices[coin]?.price,target=n('g-target'),monthly=n('g-monthly'),months=Math.max(1,Math.min(600,Math.round(n('g-months',24)))),growth=n('g-growth'),current=asset(coin).quantity;
   if(!(price>0&&target>0&&monthly>=0&&growth>-100&&growth<=200)){$('goal-results').innerHTML=tile('Cena zatím není dostupná','Doplň cenu nebo počkej na kurz','Plán bez ceny nelze spočítat.');C.empty('goal-chart','Čekám na platnou cenu a parametry.');return}

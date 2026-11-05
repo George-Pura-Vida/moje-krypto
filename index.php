@@ -128,8 +128,8 @@ if($api!==''){
 <!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#102c58"><meta name="csrf-token" content="<?=htmlspecialchars((string)($_SESSION['csrf']??''),ENT_QUOTES)?>">
 <meta name="description" content="Moje krypto – soukromá evidence BTC a ETH, online kurzy v CZK, analýza, DCA a simulace.">
-<title>Moje krypto | Jiří Janoušek</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css?v=20261105b">
-<?php if($logged):?><script src="charts.js?v=20261105b" defer></script><script src="models.js" defer></script><script src="data-tools.js?v=20261105b" defer></script><script src="app.js?v=20261105b" defer></script><?php endif;?>
+<title>Moje krypto | Jiří Janoušek</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css?v=20261105c">
+<?php if($logged):?><script src="charts.js?v=20261105c" defer></script><script src="models.js" defer></script><script src="data-tools.js?v=20261105c" defer></script><script src="app.js?v=20261105c" defer></script><?php endif;?>
 </head><body>
 <?php if(!$logged):?>
 <div class="auth-scene"><div class="auth-card"><div class="mark">₿</div>
@@ -241,6 +241,6 @@ if($api!==''){
 <label>Částka v Kč při transakci<input type="number" id="tx-czk" min="0" step="0.01" required></label><label>Poznámka<input type="text" id="tx-note" maxlength="160" placeholder="Volitelné"></label></div>
 <div class="modal-buttons"><button class="btn" type="button" id="cancel-modal">Zrušit</button><button class="btn gold" type="submit">💾 Uložit transakci</button></div></form></dialog>
 <dialog id="paste-dialog"><h2>Vložit soukromá data</h2><p>Vlož JSON zálohu nebo obsah CSV. Údaje se uloží pouze do tvé aplikace.</p><textarea id="paste-data" rows="12" aria-label="Data JSON nebo CSV" spellcheck="false"></textarea><div class="modal-buttons"><button class="btn" id="paste-cancel">Zrušit</button><button class="btn gold" id="paste-confirm">Zkontrolovat a importovat</button></div></dialog><section id="print-report"></section>
-<div id="toast" aria-live="polite" role="status"></div>
+<dialog id="import-review"><h2>Potvrdit import</h2><p id="import-review-summary"></p><div class="modal-buttons"><button class="btn" id="import-review-no">Zrušit</button><button class="btn gold" id="import-review-yes">Uložit do mé evidence</button></div></dialog><div id="toast" aria-live="polite" role="status"></div>
 <?php endif; ?>
 </body></html>
