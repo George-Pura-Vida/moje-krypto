@@ -43,7 +43,9 @@ test('QR encodes a distinct valid 8 digit VS for payments and each app message',
 test('donor page and existing account and navigation link to correct support',async()=>{
  const account=await contents('./account.php');
  assert.ok(account.includes('href="/support.html"'));
- assert.ok(account.includes('footer-support-button'));
+ assert.ok(account.includes('site-common-footer'));
+ assert.ok(account.includes('/privacy.js?v=2'));
+ assert.ok(account.includes('data-cookie-settings'));
  assert.ok(account.includes('shared')||account.includes('společného platebního'));
  const index=await contents('./index.php');
  assert.match(index,/nav-support[^>]*href="\/support\.html"/);
