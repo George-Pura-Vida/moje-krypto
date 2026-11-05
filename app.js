@@ -115,7 +115,7 @@
    const implied=K.impliedUnitPrice(t);
    return '<tr><td>'+safe(t.date)+'</td><td>'+types[t.type]+'</td><td>'+safe(t.symbol)+'</td><td>'+fmt(t.quantity,8)+'</td><td>'+money(t.czk)+'</td>'
      +'<td class="unit-price" title="Orientační kurz = částka převodu v Kč / přijaté množství; nemusí odpovídat nákupní ceně.">'
-     +(implied===null?'—':'≈ '+money(implied)+'</td>'
+     +(implied===null?'—':'≈ '+money(implied))+'</td>'
      +'<td><button class="small-btn" data-edit="'+safe(t.id)+'">Upravit</button><button class="small-btn delete" data-delete="'+safe(t.id)+'">Smazat</button></td></tr>';
   }).join('')||'<tr><td colspan="7" class="empty">Žádné transakce.</td></tr>';
   const summary=K.transferTotals(rows);
