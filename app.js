@@ -156,6 +156,7 @@
   document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.go)));
   $('burger').addEventListener('click',()=>{let open=$('sidebar').classList.toggle('open');$('mobile-shade').classList.toggle('open',open);$('burger').setAttribute('aria-expanded',String(open));$('burger').setAttribute('aria-label',open?'Zavřít menu':'Otevřít menu')});
   $('mobile-shade').addEventListener('click',closeMenu);
+  $('sidebar-close').addEventListener('click',()=>{closeMenu();$('burger').focus()});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('sidebar').classList.contains('open')){closeMenu();$('burger').focus()}});
   const periods=[['1D','1D'],['7D','7D'],['1M','1M'],['3M','3M'],['6M','6M'],['1Y','1R'],['5Y','5 let'],['15Y','15 let']];
   document.querySelectorAll('[data-periods]').forEach(box=>{
