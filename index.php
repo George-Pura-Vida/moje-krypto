@@ -99,12 +99,12 @@ if($api!==''){
 <!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#102c58"><meta name="csrf-token" content="<?=htmlspecialchars((string)($_SESSION['csrf']??''),ENT_QUOTES)?>">
 <meta name="description" content="Moje krypto – soukromá evidence BTC a ETH, online kurzy v CZK, analýza, DCA a simulace.">
-<title>Moje krypto | Jiří Janoušek</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css?v=20261106-sticky">
-<?php if($logged):?><script src="charts.js?v=20261105d" defer></script><script src="models.js" defer></script><script src="data-tools.js?v=20261105e" defer></script><script src="cost-utils.js?v=20261105e" defer></script><script src="app.js?v=20261106-menu" defer></script><?php endif;?>
+<title>Moje krypto | Jiří Janoušek</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css?v=20261106-mobile-header-v2">
+<?php if($logged):?><script src="charts.js?v=20261105d" defer></script><script src="models.js" defer></script><script src="data-tools.js?v=20261105e" defer></script><script src="cost-utils.js?v=20261105e" defer></script><script src="app.js?v=20261106-mobile-header-v2" defer></script><?php endif;?>
 <link rel="stylesheet" href="/privacy.css?v=2"><script type="module" src="/privacy.js?v=2"></script></head><body>
 <?php if($logged):?>
 <div class="app-layout"><div id="mobile-shade"></div><aside id="sidebar" class="sidebar">
-<div class="brand"><div class="brand-icon">₿</div><div><b>Moje krypto</b><small>investiční centrum</small></div></div>
+<div class="brand"><div class="brand-icon">₿</div><div><b>Moje krypto</b><small>investiční centrum</small></div><button type="button" class="sidebar-close" id="sidebar-close" aria-label="Zavřít nabídku">✕</button></div>
 <div class="nav-label">MOJE ANALYTIKA</div><nav id="navigation" aria-label="Navigace">
 <button class="nav-link active" data-page="dashboard"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z"/></svg> <span>Přehled</span></button>
 <button class="nav-link" data-page="markets"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18 M4 15l5-6 4 3 7-9"/></svg> <span>Trhy & grafy</span></button>
@@ -113,11 +113,11 @@ if($api!==''){
 <button class="nav-link" data-page="forecast"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V9m8 11V4m8 16v-8 M2 21h20"/></svg> <span>Predikce & scénáře</span></button>
 <button class="nav-link" data-page="goals"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 M12 7a5 5 0 1 0 5 5 M12 12l9-9 M16 3h5v5"/></svg> <span>Cesta k cíli</span></button>
 <button class="nav-link" data-page="settings"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16 M4 12h16 M4 18h16 M8 3v6 M16 9v6 M9 15v6"/></svg> <span>Nastavení & data</span></button>
-<a href="/account.php?view=profile" class="nav-link">👤 <span>Můj účet</span></a><a class="nav-support" href="/support.html">❤️ <span>Podpořte projekt Moje krypto</span></a></nav><div class="sidebar-bottom"><p>🔐 Soukromá evidence. Kurzy: CoinGecko / Coinbase; grafy také Kraken.</p><a href="https://jirijanousek.cz/" target="_blank" rel="noopener noreferrer">jirijanousek.cz ↗</a></div>
+<a href="/account.php?view=profile" class="nav-link">👤 <span>Můj účet</span></a><?php if(auth_is_admin($user)):?><a href="/admin.php" class="nav-link">🛡️ <span>Správa uživatelů</span></a><?php endif;?><form class="sidebar-logout-form" method="post"><input type="hidden" name="form_action" value="logout"><input type="hidden" name="csrf" value="<?=htmlspecialchars((string)($_SESSION['csrf']??''),ENT_QUOTES)?>"><button type="submit" class="nav-link">🚪 <span>Odhlásit se</span></button></form><a class="nav-support" href="/support.html">❤️ <span>Podpořte projekt Moje krypto</span></a></nav><div class="sidebar-bottom"><p>🔐 Soukromá evidence. Kurzy: CoinGecko / Coinbase; grafy také Kraken.</p><a href="https://jirijanousek.cz/" target="_blank" rel="noopener noreferrer">jirijanousek.cz ↗</a></div>
 </aside>
 <div class="workspace">
 <header class="header"><div class="header-left"><button class="burger" id="burger" aria-controls="sidebar" aria-label="Otevřít menu" aria-expanded="false">☰</button><div><div class="eyebrow">JIŘÍ JANOUŠEK / INVESTICE</div><h1 id="page-title">Přehled kryptoměn</h1></div></div>
-<div class="header-actions"><span id="online-status" class="online-status">● Načítání cen</span><a class="btn support-cta" href="/support.html">❤️ Podpořte projekt</a><button class="btn gold" id="add-transaction">＋ Převod</button>
+<div class="header-actions"><span id="online-status" class="online-status">● Načítání cen</span><a class="btn support-cta" href="/support.html">❤️ Podpořte projekt</a><button class="btn gold" id="add-transaction" aria-label="Přidat převod"><span class="add-transaction-icon" aria-hidden="true">＋</span><span class="add-transaction-text">Převod</span></button>
 <a href="/account.php?view=profile" class="logout" title="Můj účet" aria-label="Můj účet">👤</a><?php if(auth_is_admin($user)):?><a href="/admin.php" class="logout" title="Správa uživatelů" aria-label="Správa uživatelů">🛡️</a><?php endif;?><form method="post"><input type="hidden" name="form_action" value="logout"><input type="hidden" name="csrf" value="<?=htmlspecialchars((string)($_SESSION['csrf']??''),ENT_QUOTES)?>"><button class="logout" title="Odhlásit se" aria-label="Odhlásit se" type="submit">⎋</button></form></div></header>
 <main>
 <section id="page-dashboard" class="page active">
