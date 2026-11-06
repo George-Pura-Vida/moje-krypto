@@ -20,3 +20,17 @@ body{background:#f4f6f9;color:#1e2e41;font-family:system-ui,-apple-system,Segoe 
 .footer-support .footer-support-button:hover,.footer-support .footer-support-button:focus-visible{background:#622439!important;color:white!important;transform:translateY(-1px)}
 .footer-support p{margin:11px 0 0;color:#665b63;line-height:1.5;font-size:13px}
 @media(max-width:600px){.footer-support{padding:16px 12px}.footer-support .footer-support-button{width:100%;padding:12px 14px;font-size:14px}}
+
+
+/* JJ shared account design v3: stejne ovladani napric aplikacemi. */
+body{background:radial-gradient(circle at 0 0,#fffaed 0,transparent 37%),linear-gradient(180deg,#f8fafc,#eef2f7);min-height:100dvh}
+.account-header{border-bottom:1px solid #e0e6ee}
+.account-nav a{min-height:44px;border-radius:12px;transition:background .18s,border-color .18s,box-shadow .18s}
+.account-nav a:focus-visible,.primary:focus-visible,.secondary:focus-visible{outline:3px solid #d6a141;outline-offset:3px}
+.account-card{border-radius:20px;border-color:#dce4ed;box-shadow:0 20px 55px #17263d16}
+.account-card h2{letter-spacing:-.035em}
+.field input{min-height:46px;border-radius:10px}
+.primary,.secondary{min-height:45px;border-radius:11px;font-weight:750;transition:background .18s,box-shadow .18s}
+.primary{box-shadow:0 7px 19px #17263d24}
+@media(max-width:600px){.account-header{gap:12px}.account-nav{width:100%}.account-nav a{flex:1;justify-content:center}.account-card{border-radius:17px}.account-layout{gap:15px}}
+@media(prefers-reduced-motion:reduce){.account-nav a,.primary,.secondary{transition:none}}
