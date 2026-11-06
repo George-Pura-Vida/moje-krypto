@@ -50,3 +50,62 @@ body{background:var(--bg);color:var(--text,#eaf0ff)}.panel,.stat,.auth-card{back
 }
 @media print{.workspace>.header{position:static;box-shadow:none}}
 @media(prefers-reduced-motion:reduce){.btn,.nav-link,.burger,.logout{transition:none}}
+
+
+/* Mobile header v2 - stable single row, no overlapping support CTA */
+.sidebar-logout-form{margin:0;width:100%}
+.sidebar-logout-form .nav-link{width:100%;font-family:inherit;cursor:pointer}
+.sidebar-close{display:none}
+.add-transaction-icon{display:inline-flex;align-items:center;justify-content:center;font-size:18px;line-height:1}
+@media(max-width:740px){
+ .app-layout .workspace>.header{
+  position:sticky;top:0;z-index:45;display:flex;flex-wrap:nowrap;align-items:center;
+  justify-content:space-between;gap:10px;min-height:66px;max-height:72px;
+  padding:9px max(12px,env(safe-area-inset-right)) 9px max(12px,env(safe-area-inset-left));
+  background:#102b52;box-shadow:0 5px 17px #06152e55;border-bottom:1px solid #3c628e
+ }
+ .app-layout .workspace>.header .header-left{
+  display:flex;flex:1 1 auto;min-width:0;align-items:center;gap:10px
+ }
+ .app-layout .workspace>.header .header-left>div{min-width:0;flex:1 1 auto;overflow:hidden}
+ .app-layout .workspace>.header .header-left .eyebrow{display:none}
+ .app-layout .workspace>.header h1{
+  font-size:clamp(15px,4.3vw,19px);font-weight:800;line-height:1.25;letter-spacing:-.3px;
+  margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal
+ }
+ .app-layout .workspace>.header .burger{
+  display:grid;place-items:center;flex:0 0 46px;width:46px;height:46px;min-width:46px;
+  border-radius:12px;font-size:25px;background:#244e7e;color:#fff;border:1px solid #7495bb
+ }
+ .app-layout .workspace>.header .header-actions{
+  flex:0 0 auto;display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-end;
+  width:auto;max-width:none;gap:0;min-width:0
+ }
+ .app-layout .workspace>.header .header-actions a.support-cta,
+ .app-layout .workspace>.header .header-actions a.logout,
+ .app-layout .workspace>.header .header-actions form,
+ .app-layout .workspace>.header #online-status{display:none!important}
+ .app-layout .workspace>.header .header-actions #add-transaction{
+  display:inline-flex!important;align-items:center;justify-content:center;
+  flex:0 0 46px;min-width:46px;width:46px;height:46px;min-height:46px;
+  padding:0!important;border-radius:12px;background:var(--gold);
+  border:1px solid #f6ca7d;box-shadow:0 3px 11px #05132840
+ }
+ .app-layout .workspace>.header .header-actions #add-transaction .add-transaction-icon{
+  display:inline-flex;font-size:29px;line-height:1;color:#211b15;font-weight:700
+ }
+ .app-layout .workspace>.header .header-actions #add-transaction .add-transaction-text{display:none!important}
+ .sidebar .brand{position:relative;padding-right:46px}
+ .sidebar .sidebar-close{
+  display:grid;place-items:center;position:absolute;top:1px;right:0;
+  width:42px;height:42px;border:1px solid #6380a4;border-radius:11px;
+  background:#244e7e;color:#fff;font-size:22px;cursor:pointer
+ }
+ .sidebar nav .nav-support{margin:12px 0 8px}
+}
+@media(max-width:370px){
+ .app-layout .workspace>.header{gap:7px;padding-left:8px;padding-right:8px}
+ .app-layout .workspace>.header .header-left{gap:7px}
+ .app-layout .workspace>.header h1{font-size:15px}
+}
+@media print{.sidebar-close{display:none!important}}
