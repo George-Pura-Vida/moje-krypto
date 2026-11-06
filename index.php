@@ -99,7 +99,7 @@ if($api!==''){
 <!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#102c58"><meta name="csrf-token" content="<?=htmlspecialchars((string)($_SESSION['csrf']??''),ENT_QUOTES)?>">
 <meta name="description" content="Moje krypto – soukromá evidence BTC a ETH, online kurzy v CZK, analýza, DCA a simulace.">
-<title>Moje krypto | Jiří Janoušek</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css?v=20261105f">
+<title>Moje krypto | Jiří Janoušek</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css?v=20261106-sticky">
 <?php if($logged):?><script src="charts.js?v=20261105d" defer></script><script src="models.js" defer></script><script src="data-tools.js?v=20261105e" defer></script><script src="cost-utils.js?v=20261105e" defer></script><script src="app.js?v=20261105e" defer></script><?php endif;?>
 <link rel="stylesheet" href="/privacy.css?v=2"><script type="module" src="/privacy.js?v=2"></script></head><body>
 <?php if($logged):?>
@@ -116,7 +116,7 @@ if($api!==''){
 <a href="/account.php?view=profile" class="nav-link">👤 <span>Můj účet</span></a><a class="nav-support" href="/support.html">❤️ <span>Podpořte projekt Moje krypto</span></a></nav><div class="sidebar-bottom"><p>🔐 Soukromá evidence. Kurzy: CoinGecko / Coinbase; grafy také Kraken.</p><a href="https://jirijanousek.cz/" target="_blank" rel="noopener noreferrer">jirijanousek.cz ↗</a></div>
 </aside>
 <div class="workspace">
-<header class="header"><div class="header-left"><button class="burger" id="burger" aria-label="Otevřít menu" aria-expanded="false">☰</button><div><div class="eyebrow">JIŘÍ JANOUŠEK / INVESTICE</div><h1 id="page-title">Přehled kryptoměn</h1></div></div>
+<header class="header"><div class="header-left"><button class="burger" id="burger" aria-controls="sidebar" aria-label="Otevřít menu" aria-expanded="false">☰</button><div><div class="eyebrow">JIŘÍ JANOUŠEK / INVESTICE</div><h1 id="page-title">Přehled kryptoměn</h1></div></div>
 <div class="header-actions"><span id="online-status" class="online-status">● Načítání cen</span><a class="btn support-cta" href="/support.html">❤️ Podpořte projekt</a><button class="btn gold" id="add-transaction">＋ Převod</button>
 <a href="/account.php?view=profile" class="logout" title="Můj účet" aria-label="Můj účet">👤</a><?php if(auth_is_admin($user)):?><a href="/admin.php" class="logout" title="Správa uživatelů" aria-label="Správa uživatelů">🛡️</a><?php endif;?><form method="post"><input type="hidden" name="form_action" value="logout"><input type="hidden" name="csrf" value="<?=htmlspecialchars((string)($_SESSION['csrf']??''),ENT_QUOTES)?>"><button class="logout" title="Odhlásit se" aria-label="Odhlásit se" type="submit">⎋</button></form></div></header>
 <main>
