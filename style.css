@@ -29,3 +29,24 @@ body{background:var(--bg);color:var(--text,#eaf0ff)}.panel,.stat,.auth-card{back
 @media(max-width:740px){.header-actions a.support-cta{font-size:12px;padding:10px 12px;min-height:40px}}
 @media(max-width:420px){.header-actions a.support-cta{width:100%;order:3}.header-actions{max-width:100%}}
 @media print{.sidebar nav .nav-support,.header-actions a.support-cta{display:none!important}}
+
+
+/* JJ UI 2026-11-06: pevna mobilni navigace a jednotny design */
+:root{--jj-focus:#e9bc67}
+.panel,.stat{border:1px solid color-mix(in srgb,var(--line) 75%,transparent);box-shadow:0 12px 32px #07152b24}
+.panel{border-radius:17px}.stat{border-radius:16px}
+.btn,.nav-link,.burger,.logout{transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+.btn:hover,.logout:hover{transform:translateY(-1px)}
+.nav-link:focus-visible,.burger:focus-visible{outline:3px solid var(--jj-focus);outline-offset:3px}
+@media(max-width:740px){
+ .workspace>.header{position:sticky;top:0;z-index:45;align-items:center;padding:12px 13px;border-bottom:1px solid #45638a;background:rgba(13,35,72,.97);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:0 8px 23px #07142955}
+ .workspace>.header .header-left{min-width:0;flex:1}
+ .workspace>.header .burger{display:grid;place-items:center;min-width:46px;width:46px;min-height:46px;height:46px;flex-shrink:0;border:1px solid #8da6c5;background:#244774;color:#fff;box-shadow:0 3px 12px #06172f35;border-radius:12px}
+ .workspace>.header .burger:hover{background:#315789}
+ .workspace>.header h1{font-size:clamp(16px,4.4vw,21px);overflow-wrap:anywhere}
+ .workspace>.header .header-actions{gap:6px}
+ .workspace>.header .header-actions .logout{width:39px;height:39px}
+ .sidebar{overflow-y:auto;overscroll-behavior:contain;padding-bottom:max(18px,env(safe-area-inset-bottom))}
+}
+@media print{.workspace>.header{position:static;box-shadow:none}}
+@media(prefers-reduced-motion:reduce){.btn,.nav-link,.burger,.logout{transition:none}}
