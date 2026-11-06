@@ -145,7 +145,7 @@
   if(to==='goals'){runGoal();runSatoshi();}
   if(to==='strategies'&&!$('dca-chart').dataset.done)runDca();
  }
- function closeMenu(){$('sidebar').classList.remove('open');$('mobile-shade').classList.remove('open');$('burger').setAttribute('aria-expanded','false')}
+ function closeMenu(){$('sidebar').classList.remove('open');$('mobile-shade').classList.remove('open');$('burger').setAttribute('aria-expanded','false');$('burger').setAttribute('aria-label','Otevřít menu')}
  function chooseCoin(key){
   symbol=key;
   document.querySelectorAll('#quick-symbol button,#market-symbol button').forEach(b=>b.classList.toggle('selected',b.dataset.symbol===symbol));
@@ -154,8 +154,9 @@
  function setupEvents(){
   document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.page)));
   document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.go)));
-  $('burger').addEventListener('click',()=>{let open=$('sidebar').classList.toggle('open');$('mobile-shade').classList.toggle('open',open);$('burger').setAttribute('aria-expanded',String(open))});
+  $('burger').addEventListener('click',()=>{let open=$('sidebar').classList.toggle('open');$('mobile-shade').classList.toggle('open',open);$('burger').setAttribute('aria-expanded',String(open));$('burger').setAttribute('aria-label',open?'Zavřít menu':'Otevřít menu')});
   $('mobile-shade').addEventListener('click',closeMenu);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('sidebar').classList.contains('open')){closeMenu();$('burger').focus()}});
   const periods=[['1D','1D'],['7D','7D'],['1M','1M'],['3M','3M'],['6M','6M'],['1Y','1R'],['5Y','5 let'],['15Y','15 let']];
   document.querySelectorAll('[data-periods]').forEach(box=>{
    box.innerHTML=periods.map(([p,l])=>'<button type="button" data-period="'+p+'" class="'+(p===period?'selected':'')+'">'+l+'</button>').join('');
