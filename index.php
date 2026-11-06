@@ -100,7 +100,7 @@ if($api!==''){
 <meta name="theme-color" content="#102c58"><meta name="csrf-token" content="<?=htmlspecialchars((string)($_SESSION['csrf']??''),ENT_QUOTES)?>">
 <meta name="description" content="Moje krypto – soukromá evidence BTC a ETH, online kurzy v CZK, analýza, DCA a simulace.">
 <title>Moje krypto | Jiří Janoušek</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css?v=20261106-sticky">
-<?php if($logged):?><script src="charts.js?v=20261105d" defer></script><script src="models.js" defer></script><script src="data-tools.js?v=20261105e" defer></script><script src="cost-utils.js?v=20261105e" defer></script><script src="app.js?v=20261105e" defer></script><?php endif;?>
+<?php if($logged):?><script src="charts.js?v=20261105d" defer></script><script src="models.js" defer></script><script src="data-tools.js?v=20261105e" defer></script><script src="cost-utils.js?v=20261105e" defer></script><script src="app.js?v=20261106-menu" defer></script><?php endif;?>
 <link rel="stylesheet" href="/privacy.css?v=2"><script type="module" src="/privacy.js?v=2"></script></head><body>
 <?php if($logged):?>
 <div class="app-layout"><div id="mobile-shade"></div><aside id="sidebar" class="sidebar">
