@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,follow"><title>Kontakt | MOJE KRYPTO · Jiří Janoušek</title>
+<style>
+:root{--brand:#0d2450;--accent:#ffbd63;color:#253042;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:#f5f2ea;font-size:16px}a{color:inherit}header{position:sticky;top:0;z-index:5;background:var(--brand);color:#fff;box-shadow:0 3px 15px #19252d28}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:1030px;margin:auto;padding:15px 20px}.brand{display:flex;gap:12px;align-items:center;text-decoration:none;font-weight:850;font-size:19px;letter-spacing:.02em}.icon{background:var(--accent);color:#1a2530;border-radius:11px;min-width:42px;min-height:42px;display:grid;place-items:center}.back{color:#fff;text-decoration:none;font-weight:750;font-size:14px;border:1px solid #ffffff62;border-radius:11px;padding:10px 15px;white-space:nowrap}
+main{max-width:920px;margin:35px auto;padding:0 16px 40px}.panel{background:#fff;border:1px solid #e3dac8;border-radius:22px;box-shadow:0 15px 50px #29261912;overflow:hidden}
+.intro{padding:32px 36px;background:linear-gradient(120deg,var(--brand),#374c60);color:#fff}.eyebrow{color:var(--accent);text-transform:uppercase;font-size:12px;letter-spacing:2px;font-weight:850}.intro h1{margin:10px 0;font-size:clamp(25px,6vw,39px);line-height:1.17}.intro p{color:#e7e8e9;line-height:1.6;max-width:650px}.form{padding:30px 36px 34px}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.field{display:block;margin:0 0 19px;font-size:14px;font-weight:760;color:#3b424b}.field span{display:block;margin-bottom:8px}
+.field input,.field select,.field textarea{font:inherit;display:block;width:100%;padding:14px 15px;background:#fff;border:1px solid #cfc6b6;border-radius:12px;color:#272a30;min-height:52px}
+.field textarea{resize:vertical;min-height:150px}.field input:focus,.field select:focus,.field textarea:focus{outline:3px solid #d8bc7880;border-color:#b9974f}.submit{border:0;border-radius:12px;background:var(--brand);color:#fff;font:inherit;font-weight:800;font-size:16px;padding:17px 25px;width:100%;cursor:pointer;min-height:58px}.submit:hover{filter:brightness(1.16)}.notice{margin-top:17px;color:#6f706e;font-size:13px;line-height:1.7}.hp{position:absolute!important;width:1px;height:1px;opacity:0;overflow:hidden;left:-10000px}
+footer{text-align:center;color:#756e5f;font-size:13px;padding:0 16px 24px}footer a{font-weight:700}@media(max-width:620px){.fields{grid-template-columns:1fr;gap:0}.intro,.form{padding:25px 20px}.header{padding:12px}.brand{font-size:15px}.back{font-size:12px;padding:10px}.icon{min-width:37px;min-height:37px}main{margin:16px auto}}
+</style></head><body>
+<header><div class="header"><a class="brand" href="/"><span class="icon">₿</span><span>MOJE KRYPTO</span></a><a class="back" href="/">← Zpět do aplikace</a></div></header>
+<main><article class="panel"><div class="intro"><div class="eyebrow">Jiří Janoušek · osobní kontakt</div><h1>✉️ Napište mi zprávu</h1><p>Máte otázku k aplikaci, Bitcoinu nebo Ethereu? Napište mi.</p></div>
+<form class="form" action="https://jirijanousek.cz/contact.php" method="post" accept-charset="UTF-8">
+<input type="hidden" name="source" value="moje-krypto">
+<div class="fields">
+<label class="field"><span>Jméno a příjmení *</span><input name="name" type="text" autocomplete="name" maxlength="150" required placeholder="Např. Jana Nováková"></label>
+<label class="field"><span>E-mail *</span><input name="email" type="email" autocomplete="email" maxlength="254" required placeholder="vas@email.cz"></label>
+<label class="field"><span>Telefon (nepovinný)</span><input name="phone" type="tel" autocomplete="tel" maxlength="40" placeholder="+420 ..."></label>
+<label class="field"><span>Jak Vás mám oslovovat?</span><select name="salutation"><option value="auto">Automaticky podle jména</option><option value="pan">Pan</option><option value="pani">Paní</option><option value="neutral">Neutrálně</option></select></label>
+</div>
+<label class="field"><span>Vaše zpráva *</span><textarea name="message" rows="6" minlength="8" maxlength="5000" required placeholder="Jak Vám mohu pomoci?"></textarea></label>
+<div class="hp" aria-hidden="true"><label>Web<input name="website" tabindex="-1" autocomplete="off"></label></div>
+<button class="submit" type="submit">📩 Odeslat zprávu →</button>
+<p class="notice">Odesláním požádáte o kontakt. Správci přijde oznámení a na uvedený e-mail Vám poštovní služba odešle potvrzení s kopií zprávy. Údaje slouží pouze k vyřízení dotazu. <a href="https://jirijanousek.cz/ochrana-osobnich-udaju/" target="_blank" rel="noopener noreferrer">Ochrana osobních údajů ↗</a>. Neposílejte hesla ani citlivé údaje.</p>
+</form></article></main>
+<footer>© 2026 Jiří Janoušek · <a href="https://jirijanousek.cz/" target="_blank" rel="noopener noreferrer">jirijanousek.cz</a></footer>
+</body></html>
