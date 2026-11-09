@@ -32,16 +32,13 @@ function csrf():void{
  }
 }
 function fetchJson(string $url):?array{
- if(function_exists('curl_init')){
-  $ch=curl_init($url);
-  curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>5,CURLOPT_TIMEOUT=>13,CURLOPT_FOLLOWLOCATION=>false,CURLOPT_USERAGENT=>'MojeKrypto/1.0 (private CZK analysis)',CURLOPT_HTTPHEADER=>['Accept: application/json']]);
-  $s=curl_exec($ch);$status=curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
-  if($status!==200||!is_string($s))return null;
- }else{
-  $ctx=stream_context_create(['http'=>['timeout'=>12,'header'=>"Accept: application/json\r\nUser-Agent: MojeKrypto/1.0\r\n"]]);
-  $s=@file_get_contents($url,false,$ctx);
-  if(!is_string($s))return null;
- }
+ $ctx=stream_context_create(['http'=>[
+  'timeout'=>12,
+  'follow_location'=>0,
+  'header'=>"Accept: application/json\r\nUser-Agent: MojeKrypto/1.0 (private CZK analysis)\r\n",
+ ]]);
+ $s=@file_get_contents($url,false,$ctx);
+ if(!is_string($s)||!preg_match('~^HTTP/\S+ 200(?: |$)~',$http_response_header[0]??''))return null;
  $j=json_decode($s,true);
  return is_array($j)?$j:null;
 }
